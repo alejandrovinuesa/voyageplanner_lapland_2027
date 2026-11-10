@@ -1,48 +1,48 @@
-# Laponia 2027 · comparador de viaje
+# Lapland 2027 · trip comparator
 
-Comparador interactivo para elegir el viaje de grupo a Laponia (finales de enero de 2027, desde Copenhague, 10–14 personas, unos 23 años). Prioridad: auroras. También huskies, motos de nieve, renos y sauna.
+Interactive comparator to choose the group trip to Lapland (late January 2027, departing from Copenhagen, 10–14 people, around 23 years old). Priority: northern lights. Also huskies, snowmobiles, reindeer and sauna.
 
-👉 **Ver la web:** https://TU-USUARIO.github.io/laponia-2027/
+👉 **See the website:** https://alexvinuesa22-debug.github.io/voyageplanner_lapland_2027/
 
-## Las tres opciones
+## The three options
 
-| Opción | Noches | Idea |
+| Option | Nights | Idea |
 |---|---|---|
-| 🇸🇪🇳🇴 **Kiruna + Noruega** | 5 o 4 | Road trip en coche: Kiruna → Narvik → Abisko. Motos, Polar Park, cañón de Abisko, sauna en el fiordo. |
-| 🇫🇮 **Rovaniemi** | 4 (fijo) | Avión a Helsinki + tren nocturno (12 h). Casa en un lago en Posio con coche. Huskies, motos, Papá Noel, Korouoma, Ranua. |
-| 🇳🇴 **Solo Tromsø** | 5 o 4 | Vuelo directo, casa en Kvaløya con coche todos los días. Lyngen con motos, Sommarøy, esquí, auroras todas las noches. |
+| 🇸🇪🇳🇴 **Kiruna + Norway** | 5 or 4 | Road trip by car: Kiruna → Narvik → Abisko. Snowmobiles, Polar Park, Abisko canyon, sauna by the fjord. |
+| 🇫🇮 **Rovaniemi** | 4 (fixed) | Flight to Helsinki + night train (12 h). Lakeside house in Posio with a car. Huskies, snowmobiles, Santa Claus, Korouoma, Ranua. |
+| 🇳🇴 **Tromsø only** | 5 or 4 | Direct flight, house on Kvaløya with a car every day. Lyngen with snowmobiles, Sommarøy, skiing, northern lights every night. |
 
-Precio orientativo por persona con 12 personas: Rovaniemi ≈ 937 €, Solo Tromsø ≈ 1.062 € (≈ 921 € con 4 noches) y Kiruna + Noruega ≈ 1.158 €.
+Estimated price per person with 12 people: Rovaniemi ≈ €937, Tromsø only ≈ €1,062 (≈ €921 with 4 nights) and Kiruna + Norway ≈ €1,158.
 
-## Qué se puede tocar en la web
+## What you can adjust on the website
 
-- Número de personas (10–14) y noches (4 o 5).
-- Vuelo, alojamiento y transporte de cada opción.
-- Actividades: marcarlas o quitarlas cambia el total y el planning día a día, que tiene en cuenta las horas de luz.
-- Colchón del +5 % para imprevistos.
+- Number of people (10–14) and nights (4 or 5).
+- Flight, accommodation and transport for each option.
+- Activities: ticking or removing them changes the total and the day-by-day schedule, which takes daylight hours into account.
+- +5 % buffer for unexpected costs.
 
-## Cómo está calculado
+## How it is calculated
 
-- **Vuelos:** Kiwi y Kayak, 9 adultos, **solo maleta de mano**.
-- **Alojamiento:** precios reales de Booking para cada tamaño de grupo.
-- **Coches:** Kayak y planners del grupo, con seguro a todo riesgo, conductor joven, conductor extra, combustible o carga con precios locales y peajes o ferris.
-- **Comida:** 17 € al día cocinando y 45 € al día en hoteles sin cocina.
-- **Actividades:** precio de la web de cada operador. Cada partida indica si es **fuente** o **estimación**.
-- **Cambio:** 10,95 SEK/€, 11,5 NOK/€ y 7,46 DKK/€.
+- **Flights:** Kiwi and Kayak, 9 adults, **carry-on only**.
+- **Accommodation:** real Booking prices for each group size.
+- **Cars:** Kayak and the group's planners, with full-coverage insurance, young driver, extra driver, fuel or charging at local prices, and tolls or ferries.
+- **Food:** €17 per day when cooking and €45 per day in hotels without a kitchen.
+- **Activities:** price from each operator's website. Each item states whether it is a **source** or an **estimate**.
+- **Exchange rates:** 10.95 SEK/€, 11.5 NOK/€ and 7.46 DKK/€.
 
-Todo está sobreestimado a propósito. Precios consultados el 9–10 de noviembre de 2026: pueden cambiar al reservar.
+Everything is deliberately overestimated. Prices checked on 9–10 November 2026: they may change when booking.
 
-## Estructura
+## Structure
 
 ```
-index.html   ← toda la web (HTML + CSS + JS en un solo archivo)
+index.html   ← the whole website (HTML + CSS + JS in a single file)
 README.md
 ```
 
-## Actualizar
+## Updating
 
-Sustituir `index.html` por la versión nueva (en GitHub: **Add file → Upload files**). GitHub Pages se actualiza solo en uno o dos minutos.
+Replace `index.html` with the new version (on GitHub: **Add file → Upload files**). GitHub Pages updates by itself within a minute or two.
 
 ---
 
-*Herramienta de planificación, no es una reserva ni una oferta. Confirmar precios, horarios y condiciones antes de pagar.*
+*Planning tool, not a booking or an offer. Confirm prices, schedules and conditions before paying.*
