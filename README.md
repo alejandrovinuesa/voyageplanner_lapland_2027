@@ -1,8 +1,8 @@
 Laponia 2027 · comparador de viaje
 Comparador interactivo para elegir el viaje de grupo a Laponia (finales de enero de 2027, desde Copenhague, 10–14 personas, unos 23 años). Prioridad: auroras. También huskies, motos de nieve, renos y sauna.
 👉 Ver la web: https://TU-USUARIO.github.io/laponia-2027/
-Las tres opciones
-Opción	Noches	Idea
+
+Las tres opciones: Opción,	Noches,	Idea
 🇸🇪🇳🇴 Kiruna + Noruega	5 o 4	Road trip en coche: Kiruna → Narvik → Abisko. Motos, Polar Park, cañón de Abisko, sauna en el fiordo.
 🇫🇮 Rovaniemi	4 (fijo)	Avión a Helsinki + tren nocturno (12 h). Casa en un lago en Posio con coche. Huskies, motos, Papá Noel, Korouoma, Ranua.
 🇳🇴 Solo Tromsø	5 o 4	Vuelo directo, casa en Kvaløya con coche todos los días. Lyngen con motos, Sommarøy, esquí, auroras todas las noches.
