@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laponia 2027 · tres opciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Plan: frío ártico. Tinta azul noche sobre nieve; Kiruna en azul glaciar, Rovaniemi en verde aurora.
+   Layout: controles arriba, dos columnas comparadas con su barra de coste, tabla resumen y fuentes. */
+:root{
+  --bg:#eef3f8; --surface:#ffffff; --ink:#14213a; --muted:#5a6880; --line:#dbe3ee;
+  --kir:#2563eb; --rov:#0d9f7a; --nor:#7c3aed; --accent:#f97316;
+  --seg-flight:#3b5bdb; --seg-stay:#15aabf; --seg-move:#74c0fc; --seg-food:#fcc419; --seg-buffer:#e9d8c4;
+  --good:#1e8a74; --warn:#b4621a;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1424; --surface:#151f33; --ink:#e6ecf5; --muted:#9aa8bf; --line:#27344d;
+  --kir:#6f9dff; --rov:#38d9a9; --nor:#b197fc; --accent:#ff922b;
+  --seg-flight:#5c7cfa; --seg-stay:#22b8cf; --seg-move:#4dabf7; --seg-food:#fab005; --seg-buffer:#5a4a37;
+  --good:#4cc3a6; --warn:#e3a15c; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0d1424; --surface:#151f33; --ink:#e6ecf5; --muted:#9aa8bf; --line:#27344d;
+  --kir:#6f9dff; --rov:#38d9a9; --nor:#b197fc; --accent:#ff922b;
+  --seg-flight:#5c7cfa; --seg-stay:#22b8cf; --seg-move:#4dabf7; --seg-food:#fab005; --seg-buffer:#5a4a37;
+  --good:#4cc3a6; --warn:#e3a15c; color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(1200px 500px at 15% -10%,color-mix(in srgb,var(--rov) 14%,transparent),transparent 70%),radial-gradient(1000px 500px at 90% -10%,color-mix(in srgb,var(--nor) 14%,transparent),transparent 70%),var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;display:grid;gap:22px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;background:linear-gradient(90deg,var(--kir),var(--rov) 50%,var(--nor));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:22px;font-weight:700}
+h3{font-size:17px;font-weight:700}
+p{margin:0}
+.lead{color:var(--muted);max-width:70ch}
+a{color:inherit;text-decoration-color:var(--muted);text-underline-offset:2px}
+a:hover{text-decoration-color:var(--ink)}
+.num{font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(20,33,58,.04),0 6px 20px rgba(20,33,58,.05)}
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.ctl{display:grid;gap:6px}
+.ctl > span{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;border:0;background:transparent;color:var(--ink);padding:7px 14px;cursor:pointer;font-variant-numeric:tabular-nums}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:linear-gradient(135deg,var(--kir),var(--nor));color:#fff;font-weight:600}
+.seg button:focus-visible, .chip:focus-visible, input:focus-visible, select:focus-visible, .preset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toggle{display:inline-flex;gap:8px;align-items:center;cursor:pointer;user-select:none}
+.toggle input{width:18px;height:18px;accent-color:var(--ink)}
+.bigsel{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:100%}
+.rate input{width:80px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.presets{display:flex;gap:8px;flex-wrap:wrap}
+.preset{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.preset:hover{border-color:var(--ink)}
+/* comparison */
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:1180px){.cols{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.wrap{max-width:1500px}
+.dest{border-top:5px solid var(--c);display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0;align-content:start;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 9%,var(--surface)) 0,var(--surface) 220px)}
+.dest > *{min-width:0}
+.dest[data-d="kiruna"]{--c:var(--kir)}
+.dest[data-d="rovaniemi"]{--c:var(--rov)}
+.dest[data-d="noruega"]{--c:var(--nor)}
+.dest-head{display:grid;gap:6px;align-content:start;min-height:172px}
+.dest-head > div:last-child{text-align:left!important}
+.dest-head .country{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.total{font-family:var(--display);font-size:38px;font-weight:700;color:var(--c);line-height:1}
+.total small{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:500;margin-left:4px}
+.saving{font-size:13px;color:var(--muted)}
+.saving b{color:var(--good)}.saving .cur-n{color:var(--ink)}
+/* bar */
+.barbox{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.bar{position:relative;height:34px;border-radius:8px;background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--line) 70%,transparent) 6px 7px);border:1px dashed var(--line);overflow:hidden}
+.fill{position:absolute;inset:0 auto 0 0;display:flex;transition:width .35s ease}
+.fill > i{display:block;height:100%;border-right:1px solid var(--surface);transition:width .35s ease}
+@media (prefers-reduced-motion:reduce){.fill,.fill>i{transition:none}}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+/* breakdown */
+.rows{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.row .lbl{font-weight:600}
+.row .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.row .det{grid-column:1 / -1;font-size:12.5px;color:var(--muted)}
+.act select{width:100%;min-width:0;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.act .sub{min-width:0}
+.row select{font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:100%}
+.tag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:1px}
+.tag.src{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.tag.est{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+/* activities */
+.acts{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.plan{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.plan h3{margin:0 0 8px;font-size:16px}.pl-note{font-size:12.5px;color:var(--muted);margin:0 0 8px}.pl-sun{font-weight:400;color:var(--muted);font-size:11px;line-height:1.35;white-space:normal;display:inline-block}
+table.pl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+table.pl th{width:96px}
+table.pl td.pl-p{width:76px}
+table.pl td{overflow-wrap:anywhere;white-space:normal}
+table.pl th,table.pl td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+table.pl th{white-space:nowrap;font-weight:600;color:var(--ink)}
+.pl-p{color:var(--muted);white-space:normal;width:1%}
+.pl-fix{color:var(--muted)}
+.pl-free{color:var(--muted);font-style:italic}
+.pl-pr{color:var(--muted)}
+.act.nofit{border-color:var(--warn)}
+.tag.bad{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+#notice{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:9;max-width:90vw}
+.act{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.act.off{opacity:.55}
+.act input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--c)}
+.act .nm{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.act .nm .tag{margin-left:6px;vertical-align:1px}
+.act .pr{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.act .sub{min-width:0;grid-column:2 / -1;font-size:12.5px;color:var(--muted);display:grid;gap:4px}
+.act .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:0}
+/* table */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.k{color:var(--kir);font-weight:700} td.r{color:var(--rov);font-weight:700} td.n{color:var(--nor);font-weight:700}
+tr.cur td, table.flt tr.cur td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+#moves tbody tr{cursor:pointer}
+#moves tbody tr:hover td{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+table.flt td{white-space:normal;vertical-align:top}
+table.flt td, table.flt th, #moves td:last-child, #moves th:last-child{text-align:left}
+table.flt td.num, table.flt th:nth-child(3){text-align:right;white-space:nowrap}
+#moves td:last-child{min-width:260px;color:var(--muted);font-size:13px}
+.notes{display:grid;gap:10px;font-size:14px}
+.notes li{margin-bottom:6px}
+.src-list{columns:2 320px;font-size:13px;color:var(--muted);padding-left:18px;margin:0}
+.src-list li{break-inside:avoid;margin-bottom:6px}
+.callout{border-left:4px solid var(--accent);padding:12px 14px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));border-radius:0 8px 8px 0}
+.callout.warn{border-left-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--surface));padding:8px 10px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>Kiruna + Noruega · Rovaniemi · Solo Tromsø · enero 2027</h1>
+    <p class="lead">Presupuesto por persona desde Copenhague, con precios reales de vuelos (Kiwi, 9 adultos, solo maleta de mano), alojamiento (Booking) y actividades (webs de los operadores). Marca o quita actividades y mira cómo baja la barra. Todo está sobreestimado a propósito.</p>
+  </header>
+
+  <section class="panel controls" aria-label="Opciones">
+    <div class="ctl"><span>Personas</span>
+      <div class="seg" id="ctl-group">
+        <button type="button" data-v="10">10</button><button type="button" data-v="11">11</button><button type="button" data-v="12">12</button><button type="button" data-v="13">13</button><button type="button" data-v="14">14</button>
+      </div></div>
+    <div class="ctl"><span>Noches (pone el vuelo por defecto)</span>
+      <div class="seg" id="ctl-nights">
+        <button type="button" data-v="4">4 (24–28 ene)</button><button type="button" data-v="5">5 (24–29 ene)</button>
+      </div></div>
+    <div class="ctl"><span>Colchón</span>
+      <label class="toggle"><input type="checkbox" id="ctl-buffer" checked> +5 % imprevistos</label></div>
+    <div class="ctl"><span>Actividades (las tres opciones)</span>
+      <div class="presets">
+        <button class="preset" type="button" data-p="cheap">Plan por defecto</button>
+        <button class="preset" type="button" data-p="none">Ninguna</button>
+      </div></div>
+  </section>
+
+  <div class="cols" id="cols"></div>
+
+  <section class="panel" style="display:grid;gap:12px">
+    <h2>Alternativas de transporte</h2>
+    <p class="lead">Las formas de moverse que permite cada opción, con el coste por persona y el total del viaje con ella. Pulsa una fila para aplicarla a esa opción.</p>
+    <div class="tablewrap"><table id="moves">
+      <thead><tr><th>Opción</th><th>Cómo</th><th>Transporte</th><th>Total</th><th>Qué implica</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+
+  <section class="panel" style="display:grid;gap:12px">
+    <h2>Por tamaño de grupo</h2>
+    <p class="lead">Total por persona con los vuelos, el transporte, el alojamiento y las actividades que tengas elegidos en cada columna. La fila resaltada es la que estás viendo.</p>
+    <div class="tablewrap"><table id="sum">
+      <thead><tr><th>Grupo</th><th>Kiruna + Noruega</th><th>Rovaniemi</th><th>Solo Tromsø</th><th>La más barata</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <section class="panel notes">
+    <h2>Cómo está calculado</h2>
+    <ul>
+      <li><b>Fechas.</b> Por defecto 24–29 de enero (5 noches), la opción 1 del planner de vuelos y coches. Con 4 noches, 24–28. Rovaniemi va siempre con 4 noches (tren nocturno del 23 al 29).</li>
+      <li><b>Vuelos.</b> Kiwi, 9 adultos con solo maleta de mano (sin facturar), dividido entre 9, buscado el 9 de noviembre de 2026. Para 10–14 hay que hacer 2 reservas y el precio puede subir: lo cubre el colchón. El planner de vuelos y coches daba 112 + 132 € a Kiruna en Kayak para 1 adulto; para 9 sube a 324 €.</li>
+      <li><b>Kiruna + Noruega (plan del grupo).</b> Kiruna 24–26, el martes directos a Narvik/Tennevoll por la E10 (Abisko queda de paso) para aprovechar la luz en los fiordos, 26–28 allí, y el jueves vuelta a Abisko para el cañón con luz y la última noche (28–29) y vuelo de las 14:15 desde Kiruna. Camp Caroli ya no aparece: según el plan del grupo no encaja en estas fechas. Fjellkysten (Tennevoll) y Aurora Nova (Airbnb en Tjautjas) son las opciones del plan; Ballangen y Sjømannskirken, las más baratas cerca de Narvik. Narvik y Abisko tienen el mismo precio por noche que en las búsquedas del 26–31 (comprobado para 12); STF Abisko el 28–29 sale un 5 % más barato que el 30–31.</li>
+      <li><b>Coches en Kiruna.</b> Como recomienda el planner de vuelos y coches, solo coches: familiar de 5 (Kia Cee'd SW, 627 € / 5 días en Kayak) o SUV (Mercedes GLA, 745 € / 5 días), con 4 personas y maletas por coche. Las furgonetas de 9 quedan fuera: pocas, caras (1.459 € / 5 días) y pesadas en nieve. Se suman seguro a todo riesgo 25 €/día (estimación), conductor joven 20 €/día, conductor extra 8 €/día, gasolina a 2,04 €/l (media ponderada entre Suecia, 19 SEK/l, y Noruega, 26,2 NOK/l; 7 l/100 km familiar, 8 SUV) para los km del planning más un 10 %: ≈1.060 km por coche con 5 noches y ≈985 con 4 y 300 SEK por llevarlo a Noruega (Hertz; Avis no cobra). Al recoger: clavos, cable de precalentador y permiso para Noruega en el contrato.</li>
+      <li><b>Solo Tromsø (plan de tu amigo, sustituye a Full Noruega).</b> 5 noches en Tromsø (24–29) o 4 (24–28) con coche todos los días. Vuelos de Kayak con maleta de mano para 9 adultos (Norwegian directo a la ida; vuelta vie 16:50 vía Oslo o jue 19:00 directo). Coches: 3 VW ID.4 eléctricos del aeropuerto (Kayak: 266 € por coche 5 días, 273 € 4 días), con seguro, conductor joven y extra como en Kiruna, carga a ≈5,5 NOK/kWh, ≈1.100 km por coche alojándose en Tromvik (≈820 en Tromsdalen), ferry de Lyngen (73 NOK por eléctrico y trayecto) y peajes de Tromsø. Alojamiento: Tromvik Lodge (casa para 12 con sauna; para 13–14 no hay sitio y se pasa a FIVE Apartments). Los días de Lyngen y Sommarøy son los del plan de tu amigo; Malangen queda como día libre para huskies o motos en Camp Tamok. Esquí en Tromsø Alpinpark: forfait 400 NOK y alquiler estimado en 450 NOK. Motos: Xlyngen (2.795 NOK por moto de 2) en el día de Lyngen. Full Noruega (Narvik + Tromsø) queda descartada: ≈1.047 € con 5 noches, con 2 noches de auroras con coche y sin motos.</li>
+      <li><b>Rovaniemi.</b> Siempre 4 noches (24–28) con avión a Helsinki y tren nocturno (23–29), que es lo más barato: el avión directo Finnair vía Helsinki para 5 noches (24–29, 416 € con maleta de mano) sale unos 120 € más caro en total. Los alojamientos cuestan lo mismo el 24–28 que el 26–30. Transporte: furgonetas de 9 (8 personas con maletas), monovolúmenes de 7 (6) y coches de 5 (4), con la combinación más barata; furgoneta 150 €/día (Kayak), monovolumen 125 €/día (estimación), coche 105 €/día. Gasolina a 2,45 €/l y diésel a 2,60 €/l (media de Finlandia en octubre de 2026 redondeada al alza), con los km del planning más un 10 %: ≈580 km por vehículo con 2 días, ≈745 todo el viaje y ≈960 alojándose en Posio. Los vehículos se cogen el martes por la mañana y se devuelven el jueves (2 días): martes al cañón de Korouoma con luz y dos noches de auroras con coche; el miércoles queda libre para Ranua u otra excursión. Los dos días en Helsinki (sábado 23 y viernes 29) también tienen planning: Suomenlinna en el ferry público (incluida, 6,60 €) y un hueco para sauna junto al mar (Allas Sea Pool, Löyly o Kotiharjun).</li>
+      <li><b>Tren nocturno y consigna.</b> VR vende la cabina entera «desde 59 €» (1–2 personas); se cuentan 150 € por cabina y trayecto, salvo en la opción «al mínimo VR». Los dos días en Helsinki (23 y 29 de enero) llevan consigna: Radical Storage junto a la estación, 5,70 € por maleta y día; las taquillas XL de la estación (63 × 96 × 94 cm, 3–4 maletas) pueden salir más baratas compartidas.</li>
+      <li><b>Comida.</b> 17 € por persona y día cocinando (supermercado), como en el planner de tu amigo; 45 € las noches en hotel sin cocina (Scandic, Fjellkysten, Guesthouse32).</li>
+      <li><b>Planning.</b> Cada opción lleva un plan fijado que optimiza precio y luz. Finales de enero hay unas 4–6 horas de sol (Tromsø ≈10:00–13:50, Narvik y Abisko ≈9:40–14:20, Kiruna ≈9:20–14:20, Rovaniemi ≈9:45–15:15) y una hora y media más de claridad a cada lado; las horas de cada día salen en el planning (fórmula de la NOAA, ±10 min). Lo que necesita luz (motos, cañones, Polar Park, Korouoma, Abisko) va en esa ventana; los traslados largos, a primera hora o de noche; y casi todas las noches se reservan para auroras por libre: con coches en Kiruna + Noruega y Rovaniemi (martes y miércoles), a pie o en bus en Full Noruega. Quedan «Huecos» en algunas zonas (Jukkasjärvi, fiordos de Narvik, Abisko, Tromsø, Rovaniemi) por si alguien quiere una actividad sin marcar; al marcarla ocupa su hueco, y si no queda sitio sustituye a la última elegida de ese tipo. Con 4 noches lo que no cabe sale como «No cabe» y no suma. Las auroras por libre y la sauna del alojamiento no ocupan hueco.</li>
+      <li><b>Actividades.</b> Precio por persona de la web del operador o de los planners de tus amigos (indicado en cada una). Coronas a euros a 10,95 SEK/€ y 11,5 NOK/€. Las etiquetas indican si el precio es de la fuente o una estimación.</li>
+      <li><b>Colchón.</b> +5 % sobre todo, por subidas de precio, tasas y extras que no aparecen en las webs.</li>
+    </ul>
+  </section>
+
+  <section class="panel" style="display:grid;gap:10px">
+    <h2>Fuentes</h2>
+    <ul class="src-list" id="sources"></ul>
+    <p style="font-size:12.5px;color:var(--muted)">Vuelos, alojamiento y coches consultados el 9 de noviembre de 2026 (coches: planner de vuelos y coches, 7 de noviembre). Los de actividades son «desde» y pueden variar con la demanda.</p>
+  </section>
+</div>
+
+<script>
+const FOOD_K = 17, FOOD_H = 45, INS_DAY = 25;
+const SEK = 10.95;
+const NOK = 11.5, nok = v => v / NOK;
+const sek = v => v / SEK;
+
+const DATA = {
+  kiruna: {
+    name: "Kiruna + Noruega", country: "Kiruna → Abisko → Narvik → Abisko · plan del grupo", cc: "se",
+    book: { 5: ["2027-01-24", "2027-01-26"], 4: ["2027-01-24", "2027-01-25"] },
+    km: 200, km2: 300, kmPlan: { 5: 1060, 4: 985 }, fuel: { petrol: 2.04, diesel: 2.30 },
+    fuelTxt: "gasolina a 2,04 €/l: media ponderada por km entre Suecia (≈425 km a 19 SEK/l, 1,74 €) y Noruega (≈540 km a 26,2 NOK/l, 2,28 €)",
+    tr: { fleet: { car: { rate: 627 / 5 } }, fleetBy: { suv: { car: { rate: 745 / 5, l100: 8 } } }, youngDay: 20, youngRental: 0, extra: 8, bus: sek(120), cross: sek(300) },
+    modes: ["fam", "suv"],
+    flights: [
+      { id: "k5", n: 5, label: "24 → 29 ene · vuelta 14:15", pp: 2920/9, txt: "SAS · ida directa dom 24 12:10 → 14:30 · vuelta vie 29 14:15 → 18:15 con escala en Estocolmo. Solo maleta de mano. Con esta vuelta la última noche puede ser en Abisko (1 h 15 hasta el aeropuerto). Kayak daba 112 + 132 € para 1 adulto (planner de vuelos y coches); para 9 sube.", url: "https://kiwi.com/u/qyvr97" },
+      { id: "k5b", n: 5, def: 5, label: "24 → 29 ene · vuelta 05:45", pp: 2748/9, txt: "SAS · ida directa dom 24 12:10 → 14:30 · vuelta vie 29 05:45 → 09:25 vía Estocolmo. Es la más barata, pero obliga a salir de Abisko hacia las 3:45 y dejar los coches en el buzón 24 h (Avis lo tiene). Por 19 € más por persona, la de las 14:15 deja dormir la última noche.", url: "https://kiwi.com/u/zrn622z" },
+      { id: "k4", n: 4, def: 4, label: "24 → 28 ene · vuelta 05:45", pp: 2417/9, txt: "SAS · ida directa dom 24 12:10 → 14:30 · vuelta jue 28 05:45 → 09:25 vía Estocolmo. Solo maleta de mano. Con dormir la última noche en Abisko hay que salir a las 3:45; por 6 € más por persona, la del jueves 11:45 lo evita (aunque la ida llega a las 18:45).", url: "https://kiwi.com/u/f32629" },
+      { id: "k4b", n: 4, label: "24 → 28 ene · vuelta directa 11:45", pp: 2469/9, txt: "SAS · ida dom 24 vía Estocolmo, llega 18:45 · vuelta jue 28 directa 11:45 → 14:05. Solo maleta de mano. Es la que encaja con dormir la última noche en Abisko; con la de las 05:45 habría que salir de Abisko a las 3:30.", url: "https://kiwi.com/u/927779u" }
+    ],
+    stays: [
+      { id: "kb1", name: "Frost Lakeside + Ballangen + STF Abisko", slug: "lombiavagen", kitchen: true, hotelN: {5: 0, 4: 1},
+        note: "Kiruna 24–26 en apartamentos con cocina (8,6) · Narvik 26–28 en cabañas de Ballangen Camping con sauna y cocina, a 40 km del centro (8,5) · Abisko 28–29 en STF, cocina compartida (8,7). Con 4 noches, la noche de Kiruna es en Scandic (Frost no deja 1 noche).",
+        p: { 5: {10: 2779.62, 11: 2819.77, 12: 2875.48, 13: 3643.03, 14: 3683.18}, 4: {10: 2023.55, 11: 2203.71, 12: 2259.38, 13: 2711.97, 14: 2752.1} }, q: null },
+      { id: "kf", name: "Frost Lakeside + Fjellkysten + STF Abisko", slug: "lombiavagen", kitchen: true, hotelN: {5: 2, 4: 3},
+        note: "La ruta del plan del grupo: Fjellkysten es su primera opción en Tennevoll, 90 km al norte de Narvik (hotel con sauna y restaurante, 8,2 con 936 reseñas; Booking no muestra cocina, así que esas 2 noches se cuentan comiendo fuera). Kiruna en Frost y la última noche en STF Abisko.",
+        p: { 5: {10: 3623.13, 11: 3978.13, 12: 4024.79, 13: 4878.7, 14: 4909.8}, 4: {10: 2867.07, 11: 3362.06, 12: 3408.69, 13: 3947.64, 14: 3978.72} }, q: null },
+      { id: "kn", name: "Aurora Nova (Airbnb) + Ballangen + STF Abisko", slug: "aurora-nova", kitchen: true, hotelN: {5: 0, 4: 0}, est: true, ext: "https://www.airbnb.com/",
+        note: "Alternativa del plan del grupo para las noches de Kiruna: casa en Tjautjas con dormitorio compartido con cortinas, cocina y sauna; el anuncio dice 16+ huéspedes, 10 camas y un baño. Precio que vio tu amigo: 2.172 € por 3 noches para 16 (724 € la noche, casa entera), sin comprobar para 24–26. Pendiente confirmar la distancia de Tjautjas a Kiruna.",
+        p: { 5: {10: 2771.86, 11: 2812.01, 12: 2867.71, 13: 3180.34, 14: 3220.49}, 4: {10: 2047.42, 11: 2087.55, 12: 2143.22, 13: 2455.79, 14: 2495.91} }, q: null },
+      { id: "ks", name: "Scandic + Ballangen + STF Abisko", slug: "scandic-kiruna", kitchen: true, hotelN: {5: 2, 4: 1},
+        note: "Kiruna en Scandic (hotel en el centro sin cocina, 8,3, 2 personas por habitación). Narvik en Ballangen y Abisko en STF.",
+        p: { 5: {10: 2875.61, 11: 3226.11, 12: 3281.82, 13: 3904.79, 14: 3944.95}, 4: {10: 2023.55, 11: 2203.71, 12: 2259.38, 13: 2711.97, 14: 2752.1} }, q: null },
+      { id: "kj", name: "Frost Lakeside + Sjømannskirken + STF Abisko", slug: "lombiavagen", kitchen: true, hotelN: {5: 0, 4: 1},
+        note: "Narvik en el albergue de la Iglesia de los Marineros, en pleno centro, con cocina compartida y desayuno (7,8, 1.549 reseñas).",
+        p: { 5: {10: 2715.45, 11: 2853.09, 12: 2992.86, 13: 3612.85, 14: 3661.09}, 4: {10: 1959.38, 11: 2237.03, 12: 2376.76, 13: 2681.79, 14: 2730.01} }, q: null }
+    ],
+    acts: [
+      { id: "motos", name: "Motos de nieve", core: false, v: [
+        { k: "Kd", l: "4 h, 2 por moto, con comida (Explore Kiruna)", p: sek(1295), s: "src", u: "https://explore-kiruna.rezdy.com/284997/snowmobile-morning-tour-drive-your-own-snowmobile-let-your-guide-show-you-lapland-in-all-its-beauty?lang=en" },
+        { k: "Kd", l: "4 h, moto individual (+595 SEK)", p: sek(1295 + 595), s: "src", u: "https://explore-kiruna.rezdy.com/434473/snowmobile-afternoon-tour-drive-your-own-snowmobile-let-your-guide-show-you-lapland-in-all-its-beauty?lang=es" } ] },
+      { id: "huskies", name: "Huskies", core: true, v: [
+        { k: "Kd", l: "Conduces tu propio trineo, 4 h, con comida y recogida (Kiruna Dog Sled)", p: sek(2700), s: "src", u: "https://kirunadogsled.rezdy.com/499059/drive-your-own-husky-team" },
+        { k: "Kd", l: "Sentados en el trineo, 3 h (Kiruna Sleddog Tours)", p: sek(1295), s: "src", u: "https://kirunasleddogtours.rezdy.com/259366/dailytrip-with-dogs?lang=es" },
+        { k: "Kn", l: "Huskies de noche, 2 h 30, con posibles auroras (Lapland Wilderness Tours, «desde»; plan del grupo)", p: 89, s: "src", u: "https://www.laplandwildernesstours.com/" } ] },
+      { id: "renos", name: "Renos y cultura sami", core: false, v: [
+        { k: "Kd", l: "Trineo de renos con guía sami, 3 h, Jukkasjärvi", p: sek(2495), s: "src", u: "https://nlightab.rezdy.com/607773/sami-adventure-day-tour" },
+        { k: "Kj", l: "Dar de comer a los renos + paseo corto en trineo (Go to Lapland, 800 SEK; plan del grupo)", p: sek(800), s: "src", u: "https://gotolapland.com/" },
+        { k: "Kj", l: "Visita a Nutti Sámi Siida (entrada, ver renos)", p: sek(250), s: "est", u: "https://lightsoverlapland.com/?p=46375" } ] },
+      { id: "auroras", name: "Auroras", core: true, v: [
+        { k: "Kn", l: "Caza de auroras guiada, 3 h (Kiruna Sleddog Tours)", p: sek(1295), s: "src", u: "https://kirunasleddogtours.rezdy.com/index?lang=es" },
+        { k: null, l: "Por libre con los coches", p: 0, s: "est", van: true } ] },
+      { id: "animales", name: "Alces y fauna", core: false, v: [
+        { k: "Nd", l: "Polar Park (Bardu): alces, lobos, osos y bueyes almizcleros; unos 60 km desde Tennevoll o Narvik", p: nok(385), s: "src", van: true, u: "https://www.visitnarvik.com/" },
+        { k: "Kd", l: "Moto de nieve por el río Rautas buscando alces, 4 h (avistamiento no garantizado)", p: sek(1500), s: "src", u: "https://kirunasleddogtours.rezdy.com/index?lang=es" } ] },
+      { id: "canon", name: "Día en Abisko", core: false, v: [
+        { k: "Ad", l: "Cañón de Abisko con raquetas (alquiler en STF, 350 SEK); dormís allí", p: sek(350), s: "src", u: "https://www.swedishtouristassociation.com/" } ] },
+      { id: "icehotel", name: "Icehotel", core: false, v: [
+        { k: "Kj", l: "Entrada de día. 325 SEK hasta dic-2026; para 2027 aún sin precio, se cuentan 400 SEK", p: sek(400), s: "est", u: "https://www.icehotel.com/" } ] },
+      { id: "sauna", name: "Sauna y baño en hielo", core: true, v: [
+        { k: "Nn", l: "Sauna flotante en el fiordo de Narvik (Narvik Arctic Sauna)", p: nok(250), s: "src", u: "https://www.visitnarvik.com/" },
+        { k: null, l: "Sauna del alojamiento (Ballangen o STF Abisko)", p: 5, s: "est" } ] },
+      { id: "pesca", name: "Pesca en el hielo", core: false, v: [
+        { k: "Ad", l: "En el lago Torneträsk (Abisko), con guía", p: 85, s: "est" } ] }
+    ]
+  },
+  noruega: {
+    name: "Solo Tromsø", country: "Tromsø y Kvaløya · coche todos los días · plan de tu amigo", cc: "no",
+    book: { 5: ["2027-01-24", "2027-01-29"], 4: ["2027-01-24", "2027-01-28"] },
+    km: 220, km2: 0, kmPlan: { 5: 1100, 4: 900 },
+    tr: { fleet: { car: { rate: 266 / 5 + 8, l100: 25 } }, fleetN: { 4: { car: { rate: 273 / 4 + 8, l100: 25 } } }, youngDay: 20, youngRental: 0, extra: 8, cross: nok(146),
+      crossTxt: " + ferry Breivikeidet–Svensby ida y vuelta (73 NOK por eléctrico y trayecto) + peajes de Tromsø (≈8 €/día por coche)" },
+    fuel: { petrol: nok(5.5), diesel: nok(5.5) }, fuelTxt: "eléctricos: carga rápida a ≈5,5 NOK/kWh y ≈25 kWh/100 km en invierno",
+    modes: ["ev"], lockWhy: "Plan con coche todos los días: el alojamiento está fuera de Tromsø y las excursiones son en coche. Kayak: VW ID.4 eléctrico, 266 € por coche 5 días (273 € 4 días), recogida y devolución en el aeropuerto.",
+    flights: [
+      { id: "t5", n: 5, def: 5, label: "24 → 29 ene · ida directa 12:00, vuelta vie 16:50", pp: 271, txt: "Kayak, 9 adultos con maleta de mano: ida dom 24 Norwegian directo Copenhague 12:00 → Tromsø 14:35 · vuelta vie 29 SAS 16:50 → Oslo → Copenhague 22:20. 2.436 € para 9. Llegando a las 14:35 da tiempo a coger los coches y la compra con algo de claridad.", url: "https://www.kayak.es/flights/CPH-TOS/2027-01-24/2027-01-29/9adults?sort=price_a&fs=cfc=1" },
+      { id: "t5s", n: 5, label: "24 → 29 ene · ida directa 08:10 (SAS), vuelta vie 16:50", pp: 311, txt: "Kayak: ida SAS directo 08:10 → 10:50, con el domingo entero de luz · misma vuelta. 2.795 € para 9.", url: "https://www.kayak.es/flights/CPH-TOS/2027-01-24/2027-01-29/9adults?sort=price_a&fs=cfc=1" },
+      { id: "t4", n: 4, def: 4, label: "24 → 28 ene · directo ida y vuelta (jue 19:00)", pp: 229, txt: "Kayak, 9 adultos con maleta de mano: Norwegian directo dom 24 12:00 → 14:35 y jue 28 19:00 → 21:35. 2.058 € para 9.", url: "https://www.kayak.es/flights/CPH-TOS/2027-01-24/2027-01-28/9adults?sort=price_a&fs=cfc=1" }
+    ],
+    stays: [
+      { id: "tv", name: "Tromvik Lodge (Kvaløya, a 47 km)", slug: "tromvik-lodge", kitchen: true,
+        note: "Casa con cocina, sauna y jacuzzi en la costa oeste de Kvaløya, cielo muy oscuro para auroras desde la puerta · nota 9,6 (solo 6 reseñas) · 3 dormitorios para 12 (máximo 12 personas) · a ≈50 min de Tromsø y del aeropuerto. 11 personas: interpolado entre 10 y 12.",
+        p: { 5: {10: 3039.92, 11: 3208.81, 12: 3377.69, 13: null, 14: null}, 4: {10: 2431.94, 11: 2567.05, 12: 2702.15, 13: null, 14: null} }, q: null },
+      { id: "t5ap", name: "FIVE Apartments (Tromsdalen)", slug: "five-apartments", kitchen: true, kmN: { 5: 820, 4: 660 },
+        note: "Apartamentos de 2–4 con cocina pequeña, a 2,5 km del centro y 6 del aeropuerto · nota 8,4 (500 reseñas). Menos km de coche, pero más luz para las auroras y sin sauna (se puede añadir Pust). 11 y 13: interpolado.",
+        p: { 5: {10: 3277.93, 11: 3895.51, 12: 4513.09, 13: 4584.35, 14: 4655.61}, 4: {10: 2622.34, 11: 3116.41, 12: 3610.47, 13: 3667.48, 14: 3724.48} }, q: null }
+    ],
+    acts: [
+      { id: "auroras", name: "Auroras", core: true, v: [
+        { k: null, l: "Por libre: desde el lodge o con los coches donde esté despejado (Kvaløya, Ersfjordbotn, Skibotn)", p: 0, s: "est", van: true },
+        { k: "Tn", l: "Caza de auroras guiada, 6 h 30 (Arctic Guide Service, 750 NOK)", p: nok(750), s: "src", u: "https://arcticguideservice.com/" } ] },
+      { id: "motos", name: "Motos de nieve", core: false, v: [
+        { k: "Ld", l: "Xlyngen en Lenangsstraumen (Lyngen): 1 h 30 guiada, 2 por moto, con comida; 2.795 NOK por moto, se llega en coche. Encaja en el día de Lyngen cogiendo un ferry anterior", p: nok(2795 / 2), s: "src", u: "https://www.checkyeti.com/en/d/4200/31601" },
+        { k: "Xd", l: "Camp Tamok (a 90 min), 4 h, yendo en coche (Lyngsfjord Adventure)", p: nok(2272), s: "src", u: "https://www.visittromso.no/snowmobiling-midday-excl-transport" } ] },
+      { id: "esqui", name: "Esquí en Tromsø Alpinpark (Kroken)", core: false, v: [
+        { k: "Td", l: "Forfait de día (400 NOK) + alquiler de equipo (sin precio publicado, se cuentan 450 NOK); pistas iluminadas, a 10 min del centro", p: nok(400 + 450), s: "est", u: "https://kroken.skiperformance.com/" },
+        { k: "Td", l: "Solo forfait de día (400 NOK; estudiante 350)", p: nok(400), s: "src", u: "https://kroken.skiperformance.com/" } ] },
+      { id: "sauna", name: "Sauna", core: true, v: [
+        { k: null, l: "Sauna del alojamiento (Tromvik Lodge tiene sauna y jacuzzi)", p: 0, s: "src" },
+        { k: "Tn", l: "Sauna flotante Pust en el puerto, con baño en el mar (desde 150 NOK)", p: nok(150), s: "src", u: "https://www.visittromso.no/pust-sauna" } ] },
+      { id: "huskies", name: "Huskies", core: false, v: [
+        { k: "Xd", l: "Conduces tú el trineo, ≈45 min (Tromsø Villmarkssenter, a 25–35 min)", p: nok(2050), s: "src", u: "https://www.visittromso.no/self-drive-husky-dog-sledding" } ] },
+      { id: "renos", name: "Renos y cultura sami", core: false, v: [
+        { k: "Tm", l: "Dar de comer a los renos, versión corta 3 h 30 (Tromsø Lapland)", p: nok(1195), s: "src", u: "https://www.visittromso.no/reindeer-feeding-and-sami-culture-short-tour" } ] }
+    ]
+  },
+  rovaniemi: {
+    name: "Rovaniemi", country: "Finlandia · Laponia finlandesa", cc: "fi",
+    book: { 5: ["2027-01-24", "2027-01-29"], 4: ["2027-01-24", "2027-01-28"], t: ["2027-01-24", "2027-01-28"] },
+    lockNights: 4, lockNightsWhy: "Rovaniemi va siempre con 4 noches: avión a Helsinki + tren nocturno (23–29 ene, con un día en Helsinki a la ida y otro a la vuelta). Es la única combinación que sale a cuenta; con avión directo para 5 noches el vuelo sube de 348 € a 416 € por persona y el viaje sale unos 120 € más caro.",
+    km: 120, km2: 270, kmPlan: { full: 745, two: 580 }, fuel: { petrol: 2.45, diesel: 2.60 },
+    fuelTxt: "gasolina a 2,45 €/l y diésel (furgonetas) a 2,60 €/l, media de Finlandia en octubre redondeada al alza",
+    tr: { fleet: { van: { rate: 150 }, mpv: { rate: 125 }, car: { rate: 105 } }, youngDay: 0, youngRental: 20, extra: 8, bus: 8 },
+    modes: ["full", "two"],
+    flights: [
+      { id: "rt", n: 4, stay: "t", extraDays: 2, est: true, label: "Avión a Helsinki + tren nocturno (cabina a 150 €)", pp: 1587/9 + 150 + 10 + 2 * 5.70,
+        txt: "Sáb 23 SAS 07:55 → Helsinki 10:35, día en Helsinki y tren nocturno 19:29 → Rovaniemi 07:20 (24 ene). Vuelta: tren jue 28 17:52 → Helsinki 06:27, día en Helsinki y SAS vie 29 21:00 → 21:45. Avión 176 € con maleta de mano (Kiwi) + cabina de 2 personas: VR oficial «desde 59 € por cabina», en enero se cuentan 150 € por cabina y trayecto (75 €/persona) + 2 billetes de tren aeropuerto ⇄ estación central (zona ABC de HSL, 4,80 € con tarjeta, 30 min; se cuentan 10 €) + consigna los 2 días en Helsinki (11,40 €). Los trenes nocturnos salen y llegan a la estación central de Helsinki (también paran en Pasila, 5 min antes/después). Alojamiento 4 noches (24–28); se añaden 2 días de comida en Helsinki. Horarios de 2026: confirmar en vr.fi.", url: "https://kiwi.com/u/n72mvf" },
+      { id: "rt59", n: 4, def: 4, stay: "t", extraDays: 2, est: true, label: "Avión a Helsinki + tren nocturno (cabina al mínimo VR, 59 €)", pp: 1587/9 + 59 + 10 + 2 * 5.70,
+        txt: "Mismo plan, con la cabina al precio mínimo oficial de VR (59 € por cabina de 2 y trayecto = 29,50 €/persona). Es el mejor caso: en temporada alta la cabina puede subir mucho.", url: "https://www.vr.fi/en/night-trains/tickets-to-night-trains" }
+    ],
+    stays: [
+      { id: "lapinmaa", name: "Lapinmaa Apartments", slug: "apartment-lapinmaa-a", kitchen: true, over: {13: 1, 14: 2},
+        note: "Apartamentos con cocina en el centro · nota 8,5 (887 reseñas). Para 13 o 14 se cuenta el mismo precio que para 12 (sin apartamento extra)",
+        p: { 5: {10: 3807.7, 11: 3857.8, 12: 3907.9, 13: 3907.9, 14: 3907.9}, 4: {10: 3046.16, 11: 3086.24, 12: 3126.32, 13: 3126.32, 14: 3126.32}, t: {10: 3046.16, 11: 3086.24, 12: 3126.32, 13: 3126.32, 14: 3126.32} }, q: {10: null, 11: null, 12: 3807.7, 13: null, 14: null} },
+      { id: "bellarova", name: "Bellarova Apartments Evakkotie", slug: "bellarova-apartments-xi", kitchen: true,
+        note: "Apartamentos con cocina y sauna · nota 8,7 (129 reseñas) · no hay sitio para 13 o más",
+        p: { 5: {10: 3608.3, 11: 3648.38, 12: 3688.46, 13: null, 14: null}, 4: {10: 2941.95, 11: 2974.02, 12: 3006.08, 13: null, 14: null}, t: {10: 2941.95, 11: 2974.02, 12: 3006.08, 13: null, 14: null} }, q: {10: null, 11: null, 12: 3719.52, 13: 3759.6, 14: 3799.69} },
+      { id: "aneen", name: "Aneen Loma (Posio, a ~145 km)", slug: "aneen-vacation", kitchen: true, forceCar: true, km: 230, kmTotal: 960,
+        remote: "Posio está a unos 145 km del aeropuerto de Rovaniemi (≈2 h en coche en invierno) y a unos 135 km del centro y del pueblo de Papá Noel. Ranua, unos 90 km (≈1 h 15); Ruka, para huskies y motos, unos 75 km (≈1 h); el cañón de Korouoma, unos 45 km (≈40 min). Los tours de Rovaniemi con recogida no llegan hasta aquí: hay que ir en coche y volver de noche. Además, está a 65,9° N, al sur del círculo polar: menos auroras que en Rovaniemi (unos 25 % de noches frente a 50 %, según el planner de tu amigo). Las distancias son aproximadas.",
+        note: "Cabañas y casa junto a un lago, con sauna, cocina y playa privada · nota 9,5 (141 reseñas). Precio de Booking para cada tamaño de grupo + sábanas y toallas (15 €/persona) + limpieza final (150 €)",
+        p: { 5: {10: 1166.75, 11: 1256.9, 12: 1271.9, 13: 1286.9, 14: 1607.52}, 4: {10: 993.4, 11: 1068.52, 12: 1083.52, 13: 1098.52, 14: 1358.02}, t: {10: 993.4, 11: 1068.52, 12: 1083.52, 13: 1098.52, 14: 1358.02} }, q: null },
+      { id: "gh32", name: "Guesthouse32", slug: "guesthouse32", kitchen: false,
+        note: "El más barato de Rovaniemi en Booking. Pensión con baños compartidos y sin cocina · nota 7,1 (solo 7 reseñas). Con tu cuenta de Booking, 4 noches para 12 salen a 1.677 € (un 7 % menos que sin cuenta, probablemente Genius); el resto de tamaños se calcula con ese mismo descuento",
+        p: { 5: {10: 1949.92, 11: 2044.24, 12: 2096.25, 13: 2635.92, 14: 2635.92}, 4: {10: 1559.94, 11: 1635.39, 12: 1677, 13: 2108.74, 14: 2108.74}, t: {10: 1559.94, 11: 1635.39, 12: 1677, 13: 2108.74, 14: 2108.74} }, q: {10: null, 11: null, 12: 1949.92, 13: 2044.24, 14: 2096.25} }
+    ],
+    acts: [
+      { id: "motos", name: "Motos de nieve", core: false, v: [
+        { k: "Rd", l: "2 h, 2 por moto (Lapland Safaris)", p: 119, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" },
+        { k: "Rd", l: "2 h, moto individual (+50 €)", p: 169, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" } ] },
+      { id: "huskies", name: "Huskies", core: true, v: [
+        { k: "Rd", l: "Husky safari 10 km, 2,5 h, con recogida (Lapland Safaris)", p: 221, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" },
+        { k: "Rd", l: "Husky experience 3 km, 1 h 45 (Lapland Safaris)", p: 178, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" },
+        { k: "Pd", l: "Sin recogida: Kota-Husky en Posio (Karjalaisenniemi), conduces tú el trineo, 10 km, ≈1 h. Solo práctico alojándose en Posio con coches", p: 130, s: "src", full: true, u: "https://lapinmetsalainen.johku.com/en_US/husky-safari" } ] },
+      { id: "renos", name: "Renos y cultura sami", core: false, v: [
+        { k: "Rd", l: "Safari de renos 3 km, 2–2,5 h, con recogida (Lapland Safaris)", p: 198, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" },
+        { k: "Rd", l: "Moto de nieve a granja de renos, 3 h (Lapland Safaris)", p: 199, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" },
+        { k: "Rr", l: "Sin recogida: Vaaran porotila en Ranua, a 8 km del zoo: dar de comer a los renos y paseo corto en trineo, 1 h 30 (mín. 2). En coche, el mismo día que Ranua", p: 55, s: "src", van: true, u: "https://arcticguesthouseigloos.johku.com/en_US/aktiviteetit-talvi/vaaranporotila-reindeer-farm-visit" } ] },
+      { id: "auroras", name: "Auroras", core: true, v: [
+        { k: "Rn", l: "Mystery of Aurora Borealis, en bus, 2,5–3 h (Lapland Safaris)", p: 114, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" },
+        { k: "Rn", l: "Safari de auroras en moto de nieve, 3 h (Lapland Safaris)", p: 179, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" },
+        { l: "Por libre con los coches", p: 0, s: "est", van: true } ] },
+      { id: "animales", name: "Alces y fauna", core: false, v: [
+        { k: "Rf", l: "Ranua Wildlife Park por libre en coche (entrada ~27 €, se cuentan 30 €; 80 km)", p: 30, s: "est", van: true, u: "https://ranuaresort.com/en/shop/wildlife-park-ticket/" },
+        { k: "Rf", l: "Excursión a Ranua con traslado y entrada (Lapland Safaris)", p: 149, s: "src", u: "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf" } ] },
+      { id: "canon", name: "Cañón de Korouoma", core: false, v: [
+        { k: "Rf", l: "Por libre con los coches (unos 120 km)", p: 0, s: "est", van: true },
+        { k: "Rf", l: "Excursión guiada de día completo (Wild About Lapland, en Booking)", p: 145, s: "src", u: "https://www.booking.com/attractions/fi/prarlrbg5ttl-korouoma-canyon-and-waterfalls-full-day-tour.en-gb.html" } ] },
+      { id: "santa", name: "Pueblo de Papá Noel", core: false, v: [
+        { k: "Rd", l: "Entrada libre, en el Círculo Polar", p: 0, s: "src", u: "https://santaclausvillage.info/" } ] },
+      { id: "sauna", name: "Sauna y baño en hielo", core: true, v: [
+        { k: "Rn", l: "Sesión en sauna pública", p: 30, s: "est" } ] },
+      { id: "suomenlinna", name: "Helsinki: fortaleza de Suomenlinna", core: false, v: [
+        { k: "Hd", l: "Ferry público HSL desde la plaza del mercado (15 min; en invierno cada 40–60 min), ida y vuelta con billete AB de 3,30 €. La isla se visita gratis", p: 6.6, s: "src", u: "https://www.hsl.fi/en/travelling/visitors/suomenlinna" } ] },
+      { id: "saunahel", name: "Helsinki: sauna junto al mar", core: false, v: [
+        { k: "Hd", l: "Allas Sea Pool el viernes al bajar del tren (abre 6:30 entre semana): piscina templada, piscina de agua de mar y saunas, 3 h. 18 €; toalla 8,90 € aparte (llevad la vuestra)", p: 18, s: "src", u: "https://www.allaspool.fi/en/info" },
+        { k: "Hd", l: "Löyly, sauna de humo y de leña junto al mar, 2 h con toalla (25 €; sábado 13–23, viernes 13–23)", p: 25, s: "src", u: "https://www.loylyhelsinki.fi/en/public-sauna" },
+        { k: "Hd", l: "Kotiharjun, la sauna pública de leña más antigua (1928), 16 €; de martes a domingo 14–20", p: 16, s: "src", u: "https://kotiharjunsauna.fi/en/home" } ] }
+    ]
+  }
+};
+
+const GROUPS = [10, 11, 12, 13, 14];
+const FUEL_L = 2.0;
+// Plazas útiles con maletas = plazas − 1
+const VTYPES = {
+  van: { cap: 8, seats: 9, l100: 10, one: "furgoneta de 9", many: "furgonetas de 9" },
+  mpv: { cap: 6, seats: 7, l100: 8, one: "monovolumen de 7", many: "monovolúmenes de 7" },
+  car: { cap: 4, seats: 5, l100: 7, one: "coche de 5", many: "coches de 5" }
+};
+const MODE_TXT = { full: "Vehículos todo el viaje", two: "Vehículos solo 2 días + bus", fam: "Coches familiares todo el viaje", suv: "SUV todo el viaje", bus: "Bus, sin coche", tromso2: "Bus + coche 2 días en Tromsø", ev: "Coches eléctricos todo el viaje" };
+const DKEYS = ["kiruna", "rovaniemi", "noruega"];
+const TDCLS = { kiruna: "k", rovaniemi: "r", noruega: "n" };
+const COLORS = ["#f03e3e","#f76707","#d6336c","#ae3ec9","#37b24d","#f59f00","#e64980","#7048e8"];
+
+const PLAN = {
+  kiruna: {
+    5: [
+      { d: "Dom 24", p: "Tarde", txt: "Llegada 14:30 (ya anocheciendo): recoger los coches, supermercado y alojamiento" },
+      { d: "Dom 24", p: "Noche", txt: "Cena y, si está despejado, auroras por libre con los coches cerca de Kiruna" },
+      { d: "Lun 25", p: "Mañana", h: "9:00–13:00", k: "Kd" },
+      { d: "Lun 25", p: "Tarde", h: "13:30–17:00", k: "Kj", free: "Libre en Jukkasjärvi (17 km)" }, { d: "Lun 25", p: "Tarde", h: "13:30–17:00", k: "Kj", free: "Libre en Jukkasjärvi (17 km)" },
+      { d: "Lun 25", p: "Noche", h: "≈19:00", k: "Kn", free: "Auroras por libre con los coches, lejos de las luces de Kiruna" },
+      { d: "Mar 26", p: "Mañana", txt: "8:00 Kiruna → Narvik por la E10 (≈170 km, 2 h 30), con luz desde las 9:30: Abisko y Riksgränsen de paso, sin parar" },
+      { d: "Mar 26", p: "Tarde", h: "11:00–14:30", k: "Nt", free: "Narvik y fiordos con luz (mirador de Narvikfjellet) y a Ballangen (40 km)" },
+      { d: "Mar 26", p: "Noche", k: "Nn", free: "Auroras por libre en los fiordos" },
+      { d: "Mié 27", p: "Mañana", h: "10:00–13:30", k: "Nd", pre: "Salida 8:00 a Bardu (≈135 km, 2 h)" },
+      { d: "Mié 27", p: "Tarde", k: "Nd", free: "Vuelta por los fiordos y Narvik por libre" },
+      { d: "Mié 27", p: "Noche", k: "Nn", free: "Auroras por libre en los fiordos" },
+      { d: "Jue 28", p: "Mañana", txt: "9:00 Ballangen → Abisko por la E10 (≈2 h), con luz desde las 9:30" },
+      { d: "Jue 28", p: "Tarde", h: "11:15–15:00", k: "Ad", free: "Abisko libre: paseo por el lago Torneträsk helado" },
+      { d: "Jue 28", p: "Noche", k: "An", free: "Auroras por libre en Abisko, la zona más despejada" },
+      { d: "Vie 29", p: "Mañana", txt: "Abisko → aeropuerto de Kiruna (1 h 15), devolver coches · vuelo 14:15", txtBy: { k5b: "Salida de Abisko a las 3:45 → aeropuerto de Kiruna, coches al buzón 24 h · vuelo 05:45 (noche corta)" } }
+    ],
+    4: [
+      { d: "Dom 24", p: "Tarde", txt: "Llegada 18:45: coches, supermercado y alojamiento", txtBy: { k4: "Llegada 14:30 (ya anocheciendo): coches, supermercado y alojamiento" } },
+      { d: "Dom 24", p: "Noche", txt: "Cena y, si está despejado, auroras por libre cerca de Kiruna" },
+      { d: "Lun 25", p: "Mañana", h: "9:00–13:00", k: "Kd" },
+      { d: "Lun 25", p: "Tarde", txt: "13:30 Kiruna → Abisko → Narvik (≈270 km, 3 h 30; de noche desde las 15:30)" },
+      { d: "Lun 25", p: "Noche", k: "Nn", free: "Auroras por libre en los fiordos" },
+      { d: "Mar 26", p: "Mañana", h: "10:00–13:30", k: "Nd", pre: "Salida 8:00 a Bardu (≈2 h)" },
+      { d: "Mar 26", p: "Tarde", k: "Nd", free: "Vuelta por los fiordos y Narvik por libre" },
+      { d: "Mar 26", p: "Noche", k: "Nn", free: "Auroras por libre en los fiordos" },
+      { d: "Mié 27", p: "Mañana", txt: "8:30 Narvik → Abisko por la E10, con luz desde las 9:30" },
+      { d: "Mié 27", p: "Tarde", h: "11:00–15:30", k: "Ad" },
+      { d: "Mié 27", p: "Noche", k: "An", free: "Auroras por libre en Abisko, la zona más despejada" },
+      { d: "Jue 28", p: "Mañana", txt: "Abisko → aeropuerto (1 h 15), devolver coches · vuelo 11:45", txtBy: { k4: "Salida de Abisko a las 3:45 → aeropuerto de Kiruna, coches al buzón 24 h · vuelo 05:45 (noche corta)" } }
+    ]
+  },
+  rovaniemi: {
+    4: [
+      { d: "Sáb 23", p: "Mañana", txt: "Vuelo 07:55 → Helsinki 10:35, tren al centro (30 min) y maletas a la consigna" },
+      { d: "Sáb 23", p: "Tarde", h: "12:00–16:00", k: "Hd", free: "Centro a pie: catedral, plaza del mercado, iglesia Uspenski y biblioteca Oodi (gratis)" },
+      { d: "Sáb 23", p: "Noche", txt: "Cena y tren nocturno 19:29 desde la estación central" },
+      { d: "Dom 24", p: "Mañana", txt: "Llegada a Rovaniemi 07:20, desayuno y dejar maletas en el alojamiento", txtBy: { aneen: "Llegada 07:20, recoger los coches en Rovaniemi y desayuno", full: "Llegada 07:20, recoger los coches, desayuno y dejar maletas" } },
+      { d: "Dom 24", p: "Tarde", h: "11:00–15:00", k: "Rd" },
+      { d: "Dom 24", p: "Tarde", h: "11:00–15:00", k: "Rd", st: ["aneen"] },
+      { d: "Dom 24", p: "Noche", k: "Rn", free: "Auroras a pie: orilla del Kemijoki o colina de Ounasvaara", freeBy: { aneen: "Ruta a Posio (≈2 h) y auroras desde la casa junto al lago", full: "Auroras por libre con los coches" } },
+      { d: "Lun 25", p: "Mañana", h: "10:00–12:30", k: "Rd", stNot: ["aneen"] },
+      { d: "Lun 25", p: "Tarde", h: "12:30–15:30", k: "Rd", stNot: ["aneen"] },
+      { d: "Lun 25", p: "Mañana", h: "10:00–13:00", k: "Pd", st: ["aneen"], free: "Posio: lago helado y bosque con luz" },
+      { d: "Lun 25", p: "Tarde", h: "13:00–15:30", k: "Rr0", st: ["aneen"], free: "Tarde libre en la casa: sauna y lago" },
+      { d: "Lun 25", p: "Noche", k: "Rn", free: "Auroras a pie: orilla del Kemijoki o colina de Ounasvaara", freeBy: { aneen: "Auroras desde la casa junto al lago", full: "Auroras por libre con los coches" } },
+      { d: "Mar 26", p: "Día", h: "8:30–16:30", k: "Rf", pre: "8:30 recoger vehículos", preMove: "two", free: "Excursión libre con los coches", freeBy: { aneen: "Cañón de Korouoma a ≈45 km de Posio" } },
+      { d: "Mar 26", p: "Noche", k: "Rn", free: "Auroras por libre con los coches, lejos de la ciudad" },
+      { d: "Mié 27", p: "Mañana", h: "9:00–13:00", k: "Rf", free: "Libre con los coches" },
+      { d: "Mié 27", p: "Tarde", h: "13:30–15:30", k: "Rr", free: "Vuelta con la última luz" },
+      { d: "Mié 27", p: "Noche", k: "Rn", free: "Auroras por libre con los coches, lejos de la ciudad" },
+      { d: "Jue 28", p: "Mañana", h: "10:00–13:00", k: "Rd", pre: "8:30 devolver vehículos", preMove: "two", stNot: ["aneen"] },
+      { d: "Jue 28", p: "Mañana", st: ["aneen"], txt: "Posio → Rovaniemi (≈2 h) con luz y devolver los coches; tarde libre en Rovaniemi" },
+      { d: "Jue 28", p: "Tarde", txt: "Tren nocturno 17:52 a Helsinki" },
+      { d: "Vie 29", p: "Mañana", h: "6:30–12:00", k: "Hd", pre: "06:27 llegada y maletas a la consigna", free: "Desayuno y centro a pie (lo que no dio tiempo el sábado)" },
+      { d: "Vie 29", p: "Tarde", h: "12:00–19:00", k: "Hd", free: "Libre: Kallio, Design District o la iglesia de la Roca" },
+      { d: "Vie 29", p: "Noche", txt: "Recoger maletas, tren al aeropuerto ≈19:00 · vuelo 21:00" }
+    ]
+  },
+  noruega: {
+    5: [
+      { d: "Dom 24", p: "Tarde", txt: "Llegada 14:35 (directo), coches en el aeropuerto, compra grande y a Tromvik (≈50 min)", txtBy: { t5s: "Llegada 10:50: coches, compra y paseo por el centro con luz; por la tarde a Tromvik" } },
+      { d: "Dom 24", p: "Noche", txt: "Auroras desde el lodge (cielo muy oscuro) y sauna" },
+      { d: "Lun 25", p: "Mañana", txt: "Alpes de Lyngen: salida temprano a Breivikeidet, ferry a Svensby (20 min) y Lyngseidet" },
+      { d: "Lun 25", p: "Mediodía", h: "10:45–13:30", k: "Ld", free: "Fiordos y paisajes de montaña de Lyngen" },
+      { d: "Lun 25", p: "Tarde", txt: "Paradas panorámicas y vuelta por el ferry (confirmar horarios y carretera antes de salir)" },
+      { d: "Lun 25", p: "Noche", k: "Tn", free: "Auroras por libre con los coches" },
+      { d: "Mar 26", p: "Día", txt: "Sommarøy atravesando Kvaløya: miradores, playas árticas, puentes y pueblos costeros (cerca del lodge)" },
+      { d: "Mar 26", p: "Noche", k: "Tn", free: "Auroras desde el lodge o por Kvaløya" },
+      { d: "Mié 27", p: "Día", h: "9:00–15:00", k: "Xd", free: "Malangen: costa, fiordos y miradores (≈1 h 30 desde Tromsø)" },
+      { d: "Mié 27", p: "Noche", k: "Tn", free: "Auroras por libre con los coches" },
+      { d: "Jue 28", p: "Mañana", h: "10:00–13:00", k: "Tm", free: "Tromsø: centro, puerto y Catedral Ártica" },
+      { d: "Jue 28", p: "Tarde", h: "13:00–17:00", k: "Td", free: "Libre en Tromsø o Kvaløya (Kroken tiene pistas iluminadas)" },
+      { d: "Jue 28", p: "Noche", k: "Tn", free: "Última noche de auroras" },
+      { d: "Vie 29", p: "Mañana", txt: "Recoger el lodge y última vuelta por Kvaløya con luz" },
+      { d: "Vie 29", p: "Tarde", txt: "Devolver los coches en el aeropuerto ≈15:00 · vuelo 16:50" }
+    ],
+    4: [
+      { d: "Dom 24", p: "Tarde", txt: "Llegada 14:35 (directo), coches en el aeropuerto, compra grande y a Tromvik (≈50 min)" },
+      { d: "Dom 24", p: "Noche", txt: "Auroras desde el lodge (cielo muy oscuro) y sauna" },
+      { d: "Lun 25", p: "Mañana", txt: "Alpes de Lyngen: salida temprano a Breivikeidet, ferry a Svensby (20 min) y Lyngseidet" },
+      { d: "Lun 25", p: "Mediodía", h: "10:45–13:30", k: "Ld", free: "Fiordos y paisajes de montaña de Lyngen" },
+      { d: "Lun 25", p: "Tarde", txt: "Paradas panorámicas y vuelta por el ferry (confirmar horarios y carretera antes de salir)" },
+      { d: "Lun 25", p: "Noche", k: "Tn", free: "Auroras por libre con los coches" },
+      { d: "Mar 26", p: "Día", txt: "Sommarøy atravesando Kvaløya: miradores, playas árticas, puentes y pueblos costeros (cerca del lodge)" },
+      { d: "Mar 26", p: "Noche", k: "Tn", free: "Auroras desde el lodge o por Kvaløya" },
+      { d: "Mié 27", p: "Mañana", h: "10:00–13:00", k: "Tm", free: "Tromsø: centro, puerto y Catedral Ártica" },
+      { d: "Mié 27", p: "Tarde", h: "13:00–17:00", k: "Td", free: "Libre en Tromsø (Kroken tiene pistas iluminadas)" },
+      { d: "Mié 27", p: "Noche", k: "Tn", free: "Última noche de auroras" },
+      { d: "Jue 28", p: "Mañana", h: "9:00–15:00", k: "Xd", free: "Malangen o Kvaløya con luz" },
+      { d: "Jue 28", p: "Tarde", txt: "Devolver los coches ≈17:30 · vuelo 19:00 directo" }
+    ]
+  }
+};
+// Dónde se está cada día, para las horas de luz
+const LOCS = { Kiruna: [67.86, 20.23, 1], Abisko: [68.35, 18.83, 1], Narvik: [68.44, 17.43, 1], "Tromsø": [69.65, 18.96, 1], Rovaniemi: [66.50, 25.73, 2], Helsinki: [60.17, 24.94, 2] };
+const DAYLOC = {
+  kiruna: { 5: { "Dom 24": "Kiruna", "Lun 25": "Kiruna", "Mar 26": "Narvik", "Mié 27": "Narvik", "Jue 28": "Abisko", "Vie 29": "Abisko" },
+            4: { "Dom 24": "Kiruna", "Lun 25": "Kiruna", "Mar 26": "Narvik", "Mié 27": "Abisko", "Jue 28": "Abisko" } },
+  rovaniemi: { 4: { "Sáb 23": "Helsinki", "Dom 24": "Rovaniemi", "Lun 25": "Rovaniemi", "Mar 26": "Rovaniemi", "Mié 27": "Rovaniemi", "Jue 28": "Rovaniemi", "Vie 29": "Helsinki" } },
+  noruega: { 5: { "Dom 24": "Tromsø", "Lun 25": "Tromsø", "Mar 26": "Tromsø", "Mié 27": "Tromsø", "Jue 28": "Tromsø", "Vie 29": "Tromsø" },
+             4: { "Dom 24": "Tromsø", "Lun 25": "Tromsø", "Mar 26": "Tromsø", "Mié 27": "Tromsø", "Jue 28": "Tromsø" } }
+};
+// Salida y puesta de sol (fórmula de la NOAA, ±10 min) y claridad (crepúsculo civil, sol a −6°)
+function sunTimes(place, day) {
+  const [lat, lon, tz] = LOCS[place];
+  const g = 2 * Math.PI / 365 * (day - 0.5);
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const dec = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const la = lat * Math.PI / 180, noon = 720 - 4 * lon - eq + tz * 60;
+  const at = alt => { const c = (Math.sin(alt * Math.PI / 180) - Math.sin(la) * Math.sin(dec)) / (Math.cos(la) * Math.cos(dec)); const ha = Math.acos(Math.min(1, Math.max(-1, c))) * 180 / Math.PI; return [noon - 4 * ha, noon + 4 * ha]; };
+  const f = m => { m = Math.round(m / 5) * 5; return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); };
+  const s = at(-0.833), c = at(-6);
+  return { sun: f(s[0]) + "–" + f(s[1]), light: f(c[0]) + "–" + f(c[1]) };
+}
+const DEFAULTS = {
+  kiruna: { motos: 0, auroras: 1, canon: 0, animales: 0, sauna: 0 },
+  noruega: { auroras: 0, motos: 0, esqui: 0, sauna: 0 },
+  rovaniemi: { motos: 0, huskies: 2, auroras: 2, canon: 0, santa: 0, animales: 0, suomenlinna: 0, saunahel: 0 }
+};
+const MAYBE = { kiruna: ["renos", "icehotel", "pesca", "huskies"], noruega: ["huskies", "renos"], rovaniemi: [] };
+function vKind(a, v) { return v && ("k" in v) ? v.k : (a.k || null); }
+// Asigna las actividades elegidas a los huecos del plan (emparejamiento bipartito, en orden de elección)
+function placeActs(d, s) {
+  const plan0 = PLAN[d] && (PLAN[d][s.nights] || PLAN[d][DATA[d].lockNights]);
+  if (!plan0) return null;
+  const fid = s.fo ? s.fo.id : (s.flight && s.flight[d]);
+  const sid = s.stObj ? s.stObj.id : (s.stay && s.stay[d]);
+  const plan = plan0.filter(sl => (!sl.fl || sl.fl.includes(fid)) && (!sl.st || sl.st.includes(sid)) && (!sl.stNot || !sl.stNot.includes(sid)));
+  const order = (s.order && s.order[d]) || [];
+  const acts = DATA[d].acts;
+  const items = [];
+  const ids = order.concat(acts.map(a => a.id).filter(id => !order.includes(id)));
+  for (const id of ids) {
+    const a = acts.find(x => x.id === id); if (!a) continue;
+    const sel = s.sel[d][id]; if (!sel || !sel.on) continue;
+    let v = a.v[sel.v] || a.v[0]; if (!variantOk(v, s)) v = a.v.find(x => variantOk(x, s)) || v; const k = vKind(a, v);
+    if (k) items.push({ id, k });
+  }
+  const slotOf = {}, actOf = {};
+  const tryAug = (i, seen) => {
+    for (let j = 0; j < plan.length; j++) {
+      if (plan[j].k !== items[i].k || seen[j]) continue;
+      seen[j] = true;
+      if (actOf[j] == null || tryAug(actOf[j], seen)) { actOf[j] = i; slotOf[i] = j; return true; }
+    }
+    return false;
+  };
+  const unplaced = [];
+  items.forEach((it, i) => { if (!tryAug(i, {})) unplaced.push(it.id); });
+  const bySlot = {};
+  Object.keys(actOf).forEach(j => bySlot[j] = items[actOf[j]].id);
+  return { plan, bySlot, unplaced };
+}
+
+const state = {
+  group: 12, nights: 5, squeeze: false, buffer: true,
+  moveBy: { kiruna: "fam", rovaniemi: "two", noruega: "ev" },
+  flight: { kiruna: "k5b", rovaniemi: "rt59", noruega: "t5" },
+  stay: { kiruna: "kb1", rovaniemi: "aneen", noruega: "tv" },
+  sel: { kiruna: {}, rovaniemi: {}, noruega: {} },
+  order: { kiruna: [], rovaniemi: [], noruega: [] }
+};
+const CHEAP = new Set(["motos", "sauna"]);
+const freeIdx = a => a.v.findIndex(v => v.p === 0);
+function cheapSel(a) { const f = freeIdx(a); return CHEAP.has(a.id) ? { on: true, v: 0 } : f >= 0 ? { on: true, v: f } : { on: false, v: 0 }; }
+function defaultSel(d) {
+  for (const a of DATA[d].acts) {
+    if (DEFAULTS[d]) { const v = DEFAULTS[d][a.id]; state.sel[d][a.id] = v != null ? { on: true, v } : { on: false, v: 0 }; }
+    else state.sel[d][a.id] = cheapSel(a);
+  }
+  state.order[d] = DATA[d].acts.filter(a => state.sel[d][a.id].on).map(a => a.id);
+}
+for (const d of Object.keys(DATA)) defaultSel(d);
+
+const eur = v => Math.round(v).toLocaleString("es-ES") + " €";
+
+function flightOpt(d, s) {
+  const F = DATA[d].flights;
+  return F.find(f => f.id === s.flight[d]) || F.find(f => f.def === s.nights) || F[0];
+}
+function view(d, s) {
+  const fo = flightOpt(d, s);
+  const v = Object.assign({}, s, { move: s.moveBy[d], nights: fo.n, key: fo.stay || fo.n, fo });
+  const st = stayFor(d, v);
+  v.stObj = st;
+  v.modes = st && st.forceCar ? ["full"] : DATA[d].modes;
+  if (!v.modes.includes(v.move)) v.move = v.modes[0];
+  v.forced = v.modes.length === 1;
+  v.lockWhy = st && st.forceCar ? "En Posio hace falta vehículo todos los días." : DATA[d].lockWhy;
+  return v;
+}
+function stayFor(d, s) {
+  const list = DATA[d].stays;
+  let st = list.find(x => x.id === s.stay[d]);
+  const ok = x => x && x.p[s.key] && x.p[s.key][s.group] != null;
+  if (!ok(st)) st = list.find(ok) || list[0];
+  return st;
+}
+function variantOk(v, s) { return !(v.van && s.move === "bus") && !(v.full && s.move !== "full"); }
+// Reservar para 2 menos: precio buscado para el grupo − 2 (q) o, si no, el precio del mismo alojamiento para 2 personas menos
+function sqPrice(st, s) {
+  const g = s.group, k = s.key;
+  if (st.q && st.q[g] != null) return k === 5 ? st.q[g] : st.p[k][g] * st.q[g] / st.p[5][g];
+  const lower = st.p[k][g - 2];
+  return lower != null ? lower : null;
+}
+function stayPrice(st, s) {
+  const base = st.p[s.key][s.group];
+  if (!s.squeeze || base == null) return { total: base, sq: false };
+  const q = sqPrice(st, s);
+  if (q == null || q >= base - 0.5) return { total: base, sq: false };
+  return { total: q, sq: true, est: !!(st.q && st.q[s.group] != null && s.key !== 5) };
+}
+function fleetFor(D, g, days, km, cross, mode) {
+  const t = D.tr, F = Object.assign({}, t.fleet, (t.fleetN && t.fleetN[days]) || {}, (t.fleetBy && t.fleetBy[mode]) || {});
+  let best = null;
+  const maxV = F.van && F.van.max != null ? F.van.max : 3;
+  const maxOf = k => F[k] ? (k === "van" ? maxV : 4) : 0;
+  for (let v = 0; v <= maxOf("van"); v++) for (let m = 0; m <= maxOf("mpv"); m++) for (let c = 0; c <= maxOf("car"); c++) {
+    if (v * 8 + m * 6 + c * 4 < g || v + m + c === 0) continue;
+    const fp = k => D.fuel ? (k === "van" ? D.fuel.diesel : D.fuel.petrol) : FUEL_L;
+    const per = k => (F[k].rate + t.youngDay + t.extra + INS_DAY) * days + t.youngRental + km * (F[k].l100 || VTYPES[k].l100) / 100 * fp(k) + cross;
+    const cost = (v ? v * per("van") : 0) + (m ? m * per("mpv") : 0) + (c ? c * per("car") : 0);
+    if (!best || cost < best.cost - 0.01) best = { cost, n: { van: v, mpv: m, car: c } };
+  }
+  return best;
+}
+function fleetTxt(n, mode) {
+  if (!n) return "Bus y tren";
+  if (mode === "suv") return `${n.car} SUV`;
+  return Object.keys(VTYPES).filter(k => n[k]).map(k => `${n[k]} ${n[k] === 1 ? VTYPES[k].one : VTYPES[k].many}`).join(" + ");
+}
+function moveCost(D, s) {
+  const g = s.group, n = s.nights, t = D.tr;
+  if (t.fixed != null) {
+    const apt = (s.fo && s.fo.apt) || 0;
+    if (s.move !== "tromso2") return { pp: t.fixed + apt, nv: 0, days: 0, km: 0, fleet: null, cap: 0, groupCost: (t.fixed + apt) * g, fixed: true };
+    const ckm = typeof t.carKm === "object" ? (t.carKm[s.nights] || 165) : t.carKm;
+    const f = fleetFor(D, g, t.carDays, ckm, 0, s.move);
+    return { pp: t.fixed + f.cost / g, nv: f.n.van + f.n.mpv + f.n.car, days: t.carDays, km: ckm, fleet: f.n, cap: f.n.car * 4 + f.n.mpv * 6 + f.n.van * 8, groupCost: t.fixed * g + f.cost, fixed: false };
+  }
+  const st = s.stObj || {};
+  const two = s.move === "two";
+  const days = two ? 2 : n;
+  const kp = D.kmPlan || {};
+  const km = two ? (kp.two || D.km2) : ((st.kmN && st.kmN[n]) || st.kmTotal || kp[n] || kp.full || (st.km || D.km) * n);
+  const f = fleetFor(D, g, days, km, two ? 0 : (t.cross || 0), s.move);
+  const bus = two ? 2 * t.bus : 0;
+  const nv = f.n.van + f.n.mpv + f.n.car;
+  const cap = f.n.van * 8 + f.n.mpv * 6 + f.n.car * 4;
+  return { pp: f.cost / g + bus, nv, days, km, fleet: f.n, cap, groupCost: f.cost };
+}
+
+function calc(d, s0) {
+  const s = view(d, s0);
+  const D = DATA[d], n = s.nights, g = s.group;
+  const fl = s.fo.pp;
+  const st = stayFor(d, s);
+  const sp = stayPrice(st, s);
+  const stay = sp.total / g;
+  const mv = moveCost(D, s);
+  const move = mv.pp;
+  const hn = st.hotelN ? st.hotelN[n] : (st.kitchen ? 0 : n);
+  const food = FOOD_K * n + (FOOD_H - FOOD_K) * hn + FOOD_K * (s.fo.extraDays || 0);
+  const acts = [];
+  const pl = placeActs(d, s);
+  D.acts.forEach((a, i) => {
+    const sel = s.sel[d][a.id];
+    let v = a.v[sel.v];
+    if (!variantOk(v, s)) { const j = a.v.findIndex(x => variantOk(x, s)); v = j >= 0 ? a.v[j] : null; }
+    const fits = !pl || !pl.unplaced.includes(a.id);
+    acts.push({ id: a.id, name: a.name, price: (sel.on && v && fits) ? v.p : 0, color: COLORS[i % COLORS.length], noFit: sel.on && !fits });
+  });
+  const actSum = acts.reduce((t, a) => t + a.price, 0);
+  const sub = fl + stay + move + food + actSum;
+  const buf = s.buffer ? sub * 0.05 : 0;
+  return { s, fl, stay, st, sp, mv, move, food, acts, actSum, buf, total: sub + buf, pl };
+}
+
+function fullCalc(d, s) {
+  const all = JSON.parse(JSON.stringify(s));
+  for (const a of DATA[d].acts) {
+    all.sel[d][a.id].on = true;
+    // la variante más cara posible, para fijar la escala
+    let best = 0, bp = -1;
+    a.v.forEach((v, j) => { if (variantOk(v, view(d, all)) && v.p > bp) { bp = v.p; best = j; } });
+    all.sel[d][a.id].v = best;
+  }
+  return calc(d, all);
+}
+
+function bookingUrl(d, st, vs) {
+  if (st.ext) return st.ext;
+  const bk = (DATA[d].book || {})[vs.key] || ["2027-01-24", "2027-01-29"];
+  const g = stayPrice(st, vs).sq ? state.group - 2 : state.group;
+  const rooms = Math.ceil(g / 4);
+  return `https://www.booking.com/hotel/${DATA[d].cc}/${st.slug}.html?checkin=${bk[0]}&checkout=${bk[1]}&group_adults=${g}&no_rooms=${rooms}`;
+}
+
+function nightsCalc(d, n) {
+  const s = JSON.parse(JSON.stringify(state)); s.nights = n;
+  const f = DATA[d].flights.find(f => f.def === n); if (f) { s.flight[d] = f.id; if (f.move) s.moveBy[d] = f.move; }
+  return calc(d, s);
+}
+function nightsCmp(d) {
+  const D = DATA[d];
+  if (D.lockNights) {
+    let extra = "";
+    const cur = calc(d, state);
+    const alt = D.stays.find(x => x.forceCar);
+    if (alt && cur.st.id !== alt.id) {
+      const s2 = JSON.parse(JSON.stringify(state)); s2.stay[d] = alt.id;
+      const r2 = calc(d, s2), diff = cur.total - r2.total;
+      if (r2.st.id === alt.id && diff > 0.5) extra = `<br>💡 Alojamiento en ${alt.name.split(" (")[0]} (Posio): <b>−${eur(diff)}</b> por persona (${eur(r2.total)}), pero obliga a tener coches todos los días y conducir por nieve a diario (≈1 h 15–2 h por trayecto a las actividades). Lo ahorrado da para huskies o renos sin recogida: Kota-Husky en Posio, conduciendo tú (130 €), o la granja de renos Vaaran porotila junto a Ranua (55 €); con recogida desde Rovaniemi cuestan 178–221 € y 198 €`;
+    }
+    return `🔒 Bloqueado a ${D.lockNights} noches (tren nocturno 23–29)${extra}`;
+  }
+  const r5 = nightsCalc(d, 5), r4 = nightsCalc(d, 4), diff = r5.total - r4.total;
+  const lost = r4.acts.filter(a => a.noFit).map(a => a.name);
+  const t = (n, r) => state.nights === n ? `<b class="cur-n">${n} noches ${eur(r.total)}</b>` : `${n} noches ${eur(r.total)}`;
+  return `${t(5, r5)} · ${t(4, r4)} → 4 noches ${diff >= 0 ? "ahorra" : "cuesta"} <b>${eur(Math.abs(diff))}</b>${lost.length ? `<br>con 4 noches no caben: ${lost.join(", ")}` : ""}`;
+}
+function renderCols() {
+  const res = {}; DKEYS.forEach(d => res[d] = calc(d, state));
+  const scale = Math.max(...DKEYS.map(d => fullCalc(d, state).total));
+  const cols = document.getElementById("cols");
+  cols.innerHTML = "";
+  for (const d of DKEYS) {
+    const D = DATA[d], r = res[d], full = fullCalc(d, state), vs = r.s;
+    const mult = state.buffer ? 1.05 : 1;
+    const segs = [
+      { w: r.fl * mult, c: "var(--seg-flight)", t: "Vuelos" },
+      { w: r.stay * mult, c: "var(--seg-stay)", t: "Alojamiento" },
+      { w: r.move * mult, c: "var(--seg-move)", t: "Transporte" },
+      { w: r.food * mult, c: "var(--seg-food)", t: "Comida" },
+      ...r.acts.filter(a => a.price > 0).map(a => ({ w: a.price * mult, c: a.color, t: a.name }))
+    ];
+    const el = document.createElement("section");
+    el.className = "panel dest"; el.dataset.d = d;
+    const savings = full.total - r.total;
+    el.innerHTML = `
+      <div class="dest-head">
+        <div><div class="country">${D.country}</div><h2>${D.name}</h2></div>
+        <div style="text-align:right"><div class="total num">${eur(r.total)}<small>por persona</small></div>
+        <div class="saving num">${nightsCmp(d)}</div></div>
+      </div>
+      <div class="barbox">
+        <div class="bar" role="img" aria-label="Coste total ${eur(r.total)} de un máximo de ${eur(scale)}">
+          <div class="fill" style="width:${(r.total / scale * 100).toFixed(2)}%">
+            ${segs.map(s => `<i title="${s.t}: ${eur(s.w)}" style="width:${(s.w / r.total * 100).toFixed(3)}%;background:${s.c}"></i>`).join("")}
+          </div>
+        </div>
+        <div class="axis num"><span>0 €</span><span>${eur(scale / 2)}</span><span>${eur(scale)}</span></div>
+        <div class="legend">
+          <span><i style="background:var(--seg-flight)"></i>Vuelos</span><span><i style="background:var(--seg-stay)"></i>Alojamiento</span>
+          <span><i style="background:var(--seg-move)"></i>Transporte</span><span><i style="background:var(--seg-food)"></i>Comida</span>
+          <span><i style="background:linear-gradient(90deg,#f03e3e,#f76707,#d6336c,#ae3ec9,#37b24d)"></i>Actividades</span>
+        </div>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="lbl">Viaje ida y vuelta, maleta de mano <span class="tag ${vs.fo.est ? "est" : "src"}">${vs.fo.est ? "Estimación" : "Fuente"}</span></span><span class="val">${eur(r.fl)}</span>
+          <span class="det">${D.lockNights ? `<div class="callout warn" style="margin:4px 0 6px"><b>Bloqueado a ${D.lockNights} noches.</b> ${D.lockNightsWhy}</div>` : ""}<select aria-label="Vuelo a ${D.name}" data-flight="${d}">${D.flights.map(f => `<option value="${f.id}" ${f.id === vs.fo.id ? "selected" : ""}>${f.label} · ${eur(f.pp)}</option>`).join("")}</select><br>${vs.fo.txt} · <a href="${vs.fo.url}">${vs.fo.url.includes("vr.fi") ? "ver en VR" : vs.fo.url.includes("kayak") ? "ver en Kayak" : "ver en Kiwi"}</a></span></div>
+        <div class="row"><span class="lbl">Alojamiento, ${vs.nights} noches <span class="tag ${r.sp.est || r.st.est || (r.st.over && r.st.over[state.group]) ? "est" : "src"}">${r.sp.est || r.st.est || (r.st.over && r.st.over[state.group]) ? "Estimación" : "Fuente"}</span></span><span class="val">${eur(r.stay)}</span>
+          <span class="det">
+            <select aria-label="Alojamiento en ${D.name}" data-stay="${d}">
+              ${D.stays.map(st => `<option value="${st.id}" ${st.id === r.st.id ? "selected" : ""} ${st.p[vs.key][state.group] == null ? "disabled" : ""}>${st.name}${st.p[vs.key][state.group] == null ? " (sin sitio)" : " · " + eur(st.p[vs.key][state.group] / state.group) + "/persona"}</option>`).join("")}
+            </select><br>${r.st.remote ? `<span class="callout warn" style="display:block;margin:6px 0">⚠️ <b>Lejos de las actividades.</b> ${r.st.remote}</span>` : ""}${r.st.over && r.st.over[state.group] ? `<span class="callout warn" style="display:block;margin:6px 0">⚠️ <b>${r.st.over[state.group] === 1 ? "Una persona" : "Dos personas"} de más.</b> El precio es el de 12 personas: los apartamentos que caben en esa reserva son para 12. Para ${state.group} habría que confirmar con Lapinmaa que aceptan ${r.st.over[state.group] === 1 ? "a una persona más" : "a dos personas más"} en sofás cama o colchones, y si cobran suplemento. Si no lo aceptan, hace falta otro apartamento y el precio sube a unos 4.500 € (4 noches).</span>` : ""}${r.st.note} · ${eur(r.sp.total)} el grupo${r.sp.sq ? ` (reservando para ${state.group - 2}; precio normal ${eur(r.st.p[vs.key][state.group])})` : (state.squeeze ? " · sin dato para 2 menos" : "")} · <a href="${bookingUrl(d, r.st, vs)}">${r.st.ext ? "ver web" : "ver en Booking"}</a></span></div>
+        <div class="row"><span class="lbl">Transporte <span class="tag ${r.mv.fixed ? "src" : "est"}">${r.mv.fixed ? "Fuente" : "Estimación"}</span></span><span class="val">${eur(r.move)}</span>
+          <span class="det">${vs.forced ? `<div class="callout warn" style="margin:4px 0 6px"><b>Bloqueado:</b> ${vs.lockWhy}${r.mv.fixed ? "" : ` Se elige sola la combinación más barata de vehículos para ${state.group} personas.`}</div>` : ""}<select aria-label="Transporte en ${D.name}" data-move="${d}" ${vs.forced ? "disabled" : ""}>${vs.modes.map(m => `<option value="${m}" ${m === vs.move ? "selected" : ""}>${MODE_TXT[m]} · ${eur(calc(d, Object.assign({}, state, { moveBy: Object.assign({}, state.moveBy, { [d]: m }) })).move)}/persona</option>`).join("")}</select><br>${r.mv.fixed ? `${D.tr.fixedTxt}${r.s.fo.apt ? ` y traslado al aeropuerto de Tromsø (${eur(r.s.fo.apt)}, depende de la hora del vuelo)` : ""} · total del grupo ${eur(r.mv.groupCost)}` : `${fleetTxt(r.mv.fleet, vs.move)} (${r.mv.cap} plazas con maletas) × ${r.mv.days} días: alquiler, seguro a todo riesgo ${INS_DAY} €/día, conductor joven, 1 conductor extra y ${D.fuel && D.fuel.petrol > 1 ? "gasolina" : "carga"} (${Math.round(r.mv.km)} km por vehículo según el planning, +10 %; ${D.fuelTxt || "2 €/l"})${D.tr.cross && vs.move !== "two" ? (D.tr.crossTxt || " + tasa por cruzar a Noruega") : ""}${vs.move === "two" ? " + bus del aeropuerto" : ""}${vs.move === "tromso2" ? `, peajes de Tromsø (≈15 €/coche). Además: ${D.tr.fixedTxt}. Precio real de Kayak: VW ID.4 eléctrico, 174 € por coche del miércoles 20:00 al viernes 04:00 en el aeropuerto` : ""} · total del grupo ${eur(r.mv.groupCost)}`}</span></div>
+        <div class="row"><span class="lbl">Comida <span class="tag est">Estimación</span></span><span class="val">${eur(r.food)}</span>
+          <span class="det">${r.st.kitchen ? `${FOOD_K} € por día cocinando` : `${FOOD_H} € por día: el alojamiento no tiene cocina`}${r.st.hotelN && r.st.hotelN[r.s.nights] && r.st.kitchen ? ` (${FOOD_H} € la noche en hotel sin cocina)` : ""}${vs.fo.extraDays ? ` + 2 días en Helsinki a ${FOOD_K} €` : ""}</span></div>
+        <div class="row"><span class="lbl">Actividades</span><span class="val">${eur(r.actSum)}</span></div>
+        ${state.buffer ? `<div class="row"><span class="lbl">Colchón +5 % <span class="tag est">Estimación</span></span><span class="val">${eur(r.buf)}</span></div>` : ""}
+      </div>
+      <div class="acts">
+        ${D.acts.map((a, i) => {
+          const sel = state.sel[d][a.id];
+          const okIdx = a.v.map(v => variantOk(v, vs));
+          let vi = sel.v; if (!okIdx[vi]) vi = okIdx.indexOf(true);
+          const v = vi >= 0 ? a.v[vi] : null;
+          const disabled = !v;
+          const on = sel.on && !disabled;
+          const noFit = on && r.pl && r.pl.unplaced.includes(a.id);
+          const maybe = !on && (MAYBE[d] || []).includes(a.id);
+          return `<div class="act ${on ? "" : "off"} ${noFit ? "nofit" : ""}">
+            <input type="checkbox" id="a-${d}-${a.id}" data-d="${d}" data-a="${a.id}" ${on ? "checked" : ""} ${disabled ? "disabled" : ""}>
+            <label class="nm" for="a-${d}-${a.id}"><span class="sw" style="background:${COLORS[i % COLORS.length]}"></span>${a.name}${noFit ? `<span class="tag bad">No cabe</span>` : ""}${maybe ? `<span class="tag est">En duda</span>` : ""}</label>
+            <span class="pr">${v ? (v.p ? eur(v.p) : "Gratis") : "—"}</span>
+            <div class="sub">
+              ${a.v.length > 1 ? `<select aria-label="Opción de ${a.name}" data-d="${d}" data-av="${a.id}">${a.v.map((x, j) => `<option value="${j}" ${j === vi ? "selected" : ""} ${okIdx[j] ? "" : "disabled"}>${x.l} · ${x.p ? eur(x.p) : "gratis"}</option>`).join("")}</select>` : `<span>${a.v[0].l}</span>`}
+              <span>${v ? `<span class="tag ${v.s}" style="margin-left:0">${v.s === "src" ? "Fuente" : "Estimación"}</span>${v.u ? ` <a href="${v.u}">ver</a>` : ""}` : "Necesita las furgonetas"}</span>
+            </div></div>`;
+        }).join("")}
+      </div>
+      ${r.pl ? planHtml(d, r) : ""}`;
+    cols.appendChild(el);
+  }
+}
+
+function dayLight(d, nights, label) {
+  const m = DAYLOC[d] && (DAYLOC[d][nights] || DAYLOC[d][DATA[d].lockNights]); const place = m && m[label];
+  if (!place) return "";
+  const t = sunTimes(place, +label.split(" ")[1]);
+  return `<br><small class="pl-sun">${place}<br>☀ ${t.sun}<br>luz ${t.light}</small>`;
+}
+function planHtml(d, r) {
+  const { plan, bySlot, unplaced } = r.pl;
+  const acts = DATA[d].acts;
+  const nameOf = id => acts.find(a => a.id === id);
+  const cand = k => acts.filter(a => !state.sel[d][a.id].on && a.v.some(v => vKind(a, v) === k)).map(a => a.name);
+  const days = [];
+  plan.forEach((sl, j) => { let g = days.find(x => x.d === sl.d); if (!g) days.push(g = { d: sl.d, rows: [] }); g.rows.push([sl, j]); });
+  const cell = (sl, j) => {
+    if (sl.txt) { const tb = sl.txtBy || {}; const sidt = r.s.stObj && r.s.stObj.id; return `<span class="pl-fix">${tb[sidt] || tb[r.s.move + "|" + r.s.fo.id] || tb[r.s.fo.id] || tb[r.s.move] || sl.txt}</span>`; }
+    const pre = sl.pre && (!sl.preMove || sl.preMove === r.s.move) ? `<span class="pl-fix">${sl.pre} · </span>` : "";
+    const id = bySlot[j];
+    if (id) { const a = nameOf(id); let v = a.v[state.sel[d][id].v] || a.v[0]; if (!variantOk(v, r.s)) v = a.v.find(x => variantOk(x, r.s)) || v; return `${pre}<b>${a.name}</b> <span class="pl-pr">${v.p ? eur(v.p) : "gratis"}</span>`; }
+    const night = sl.p === "Noche";
+    const sidc = r.s.stObj && r.s.stObj.id; const base = (sl.freeBy && (sl.freeBy[sidc] || sl.freeBy[r.s.move])) || sl.free || (night ? "Auroras por libre" : "Libre");
+    const c = cand(sl.k);
+    return `${pre}<span class="pl-free">${base}</span>${c.length ? `<br><small>Hueco: podría ir ${c.join(", ")}</small>` : ""}`;
+  };
+  return `<div class="plan"><h3>Planning · ${r.s.nights} noches</h3><p class="pl-note">Plan fijado optimizando precio y horas de luz: lo que necesita luz va entre las ${d === "rovaniemi" ? "10 y las 15" : "9:30 y las 14:30"}, los traslados largos a primera hora o ya de noche, y las noches libres se usan para auroras. Los «Hueco» son sitios libres por si alguien quiere añadir una actividad sin marcar.</p>
+    ${unplaced.length ? `<div class="callout warn" style="margin-bottom:8px">⚠️ <b>No caben:</b> ${unplaced.map(id => nameOf(id).name).join(", ")}. No se cuentan en el total; quita otra actividad del mismo tipo o vuelve a 5 noches.</div>` : ""}
+    <table class="pl"><tbody>${days.map(g => g.rows.map(([sl, j], i) => `<tr>${i === 0 ? `<th rowspan="${g.rows.length}">${g.d}${dayLight(d, r.s.nights, g.d)}</th>` : ""}<td class="pl-p">${sl.p}${sl.h ? `<br><small>${sl.h}</small>` : ""}</td><td>${cell(sl, j)}</td></tr>`).join("")).join("")}</tbody></table></div>`;
+}
+let NOTICE = "";
+function renderTable() {
+  const tb = document.querySelector("#sum tbody");
+  tb.innerHTML = "";
+  for (const g of GROUPS) {
+    const s = JSON.parse(JSON.stringify(state)); s.group = g;
+    const t = {}; DKEYS.forEach(d => t[d] = calc(d, s).total);
+    const best = DKEYS.slice().sort((a, b) => t[a] - t[b]);
+    const tr = document.createElement("tr");
+    if (g === state.group) tr.className = "cur";
+    tr.innerHTML = `<td>${g} personas</td>${DKEYS.map(d => `<td class="${TDCLS[d]}">${eur(t[d])}</td>`).join("")}<td>${DATA[best[0]].name}, ${eur(t[best[1]] - t[best[0]])} menos que ${DATA[best[1]].name}</td>`;
+    tb.appendChild(tr);
+  }
+}
+function renderMoves() {
+  const tb = document.querySelector("#moves tbody");
+  tb.innerHTML = "";
+  const TXT = { full: "Libertad total para auroras y excursiones", two: "Vehículo 2 días para excursiones y una noche de auroras; el resto, tours con recogida y bus del aeropuerto", fam: "Lo que recomienda el planner de vuelos y coches: maletero grande, estable y barato", suv: "Más altura y tracción para caminos con nieve", bus: "Sin conducir; los horarios del bus mandan", tromso2: "", ev: "3 eléctricos del aeropuerto todo el viaje: excursiones, ferry a Lyngen y auroras donde esté despejado" };
+  for (const d of DKEYS) {
+    const v0 = view(d, state);
+    for (const m of v0.modes) {
+      const s = JSON.parse(JSON.stringify(state)); s.moveBy[d] = m;
+      const r = calc(d, s);
+      const tr = document.createElement("tr");
+      if (m === v0.move) tr.className = "cur";
+      tr.dataset.m = m; tr.dataset.d = d; tr.tabIndex = 0;
+      tr.innerHTML = `<td>${DATA[d].name}</td><td>${MODE_TXT[m]}<br><small>${fleetTxt(r.mv.fleet, m)}</small></td><td>${eur(r.move)}</td><td class="${TDCLS[d]}">${eur(r.total)}</td><td>${TXT[m]}</td>`;
+      tb.appendChild(tr);
+    }
+  }
+}
+function renderSources() {
+  const items = [
+        ["Booking.com: Frost Longstay Lakeside", "https://www.booking.com/hotel/se/lombiavagen.html"],
+    ["Booking.com: Scandic Kiruna", "https://www.booking.com/hotel/se/scandic-kiruna.html"],
+    ["Booking.com: Ballangen Camping (Narvik)", "https://www.booking.com/searchresults.html?ss=Ballangen+Camping"],
+    ["Booking.com: Sjømannskirken (Narvik)", "https://www.booking.com/searchresults.html?ss=Sj%C3%B8mannskirken+Narvik"],
+    ["Booking.com: STF Abisko Turiststation", "https://www.booking.com/searchresults.html?ss=STF+Abisko+Turiststation"],
+    ["Visit Narvik: Polar Park (desde 385 NOK) y Narvik Arctic Sauna (desde 250 NOK)", "https://www.visitnarvik.com/"],
+    ["Hertz Suecia: tasa por cruzar frontera, 300 SEK por alquiler (condiciones en PDF)", "https://www.hertz.se/"],
+    ["Estación central de Helsinki: taquillas (horario, tamaños, duración)", "https://paarautatieasema.fi/en/services"],
+    ["Kayak: coches en Tromsø 27–29 ene (VW ID.4, 174 €)", "https://www.kayak.es/cars/TOS/2027-01-27-20h/2027-01-29-04h?sort=price_a"],
+    ["Kayak: vuelos Copenhague–Tromsø 24–29 ene", "https://www.kayak.es/flights/CPH-TOS/2027-01-24/2027-01-29/9adults?sort=price_a&fs=cfc=1"],
+    ["Kayak: coches en Tromsø 24–29 ene", "https://www.kayak.es/cars/TOS/2027-01-24-22h/2027-01-29-15h?sort=price_a"],
+    ["Tromvik Lodge (Booking)", "https://www.booking.com/hotel/no/tromvik-lodge.html"],
+    ["Ferry Breivikeidet–Svensby: precios 2026", "https://www.fergeruter.info/prices/brevikeidet-svensby"],
+    ["Xlyngen: motos de nieve en Lenangsstraumen", "https://www.checkyeti.com/en/d/4200/31601"],
+    ["Tromsø Alpinpark: forfaits", "https://kroken.skiperformance.com/en/tromso-kroken-ski-resort/support/prices"],
+    ["Radical Storage: consigna junto a la estación de Helsinki (5,70 € por maleta y día)", "https://radicalstorage.com/luggage-storage/helsinki/helsinki-central-train-station"],
+    ["Kiwi.com: CPH–Kiruna 24–29 ene, solo maleta de mano (9 adultos)", "https://kiwi.com/u/qyvr97"],
+    ["Kiwi.com: CPH–Evenes 24 ene (Norwegian)", "https://kiwi.com/u/9pmprcd"],
+    ["Kiwi.com: Tromsø–CPH 29 ene (SAS)", "https://kiwi.com/u/yjp9k2r"],
+    ["Kiwi.com: CPH–Rovaniemi 24–29 ene", "https://kiwi.com/u/68kqrgk"],
+    ["Kiwi.com: CPH–Helsinki 23–29 ene (tren nocturno)", "https://kiwi.com/u/n72mvf"],
+    ["Kayak: coches en el aeropuerto de Kiruna 24–29 ene (planner de vuelos y coches)", "https://www.kayak.es/cars/KRN/2027-01-24-15h/2027-01-29-05h?sort=price_a"],
+    ["Avis Suecia: condiciones (Noruega gratis, conductor adicional)", "https://abglac.com/rental-conditions/se/avis"],
+    ["Booking.com: Fjellkysten (Tennevoll)", "https://www.booking.com/hotel/no/fjellkysten-as.html"],
+    ["Booking.com: Sjømannskirken Narvik", "https://www.booking.com/hotel/no/sjomannskirken-narvik.html"],
+    ["Booking.com: Basecamp Narvik", "https://www.booking.com/hotel/no/basecamp-narvik.html"],
+    ["Booking.com: Tromsø Lodge & Camping", "https://www.booking.com/hotel/no/tromso-camping.html"],
+    ["Booking.com: Enter Viking Apartment Hotel (Tromsø)", "https://www.booking.com/hotel/no/enter-viking-apartments.html"],
+    ["Narvikfjellet: forfait 570 NOK y alquiler 610 NOK; góndola de auroras", "https://narvikfjellet.no/"],
+    ["SJ: bus 950 Narvik–Abisko (562 SEK)", "https://www.sj.se/"],
+    ["Entur: buses Evenes–Narvik, Narvik–Tromsø y Tromsø", "https://entur.no/"],
+    ["Arctic Guide Service: caza de auroras en Tromsø (750 NOK)", "https://arcticguideservice.com/"],
+    ["Arctic Train Narvik–Bjørnfjell (695 NOK)", "https://arctictrain.no/"],
+    ["Booking.com: Lapinmaa Apartments", "https://www.booking.com/hotel/fi/apartment-lapinmaa-a.html"],
+    ["Booking.com: Bellarova Apartments Evakkotie", "https://www.booking.com/hotel/fi/bellarova-apartments-xi.html"],
+    ["Lapland Safaris: Rovaniemi winter safaris 2027 (PDF oficial)", "https://a.storyblok.com/f/279002/x/60843fa0d0/rovaniemi-winter-safaris-2027-english.pdf"],
+    ["Explore Kiruna: motos de nieve", "https://explore-kiruna.rezdy.com/284997/snowmobile-morning-tour-drive-your-own-snowmobile-let-your-guide-show-you-lapland-in-all-its-beauty?lang=en"],
+    ["Kiruna Dog Sled: conduce tu trineo", "https://kirunadogsled.rezdy.com/499059/drive-your-own-husky-team"],
+    ["Kiruna Sleddog Tours: huskies, auroras, alces", "https://kirunasleddogtours.rezdy.com/index?lang=es"],
+    ["N-Light: Sami adventure day tour (renos)", "https://nlightab.rezdy.com/607773/sami-adventure-day-tour"],
+    ["Icehotel (precio de entrada citado por Pixidia, oct-2026)", "https://pixidia.com/?p=88056"],
+    ["Ranua Resort: entrada al parque de fauna", "https://ranuaresort.com/en/shop/wildlife-park-ticket/"],
+    ["Kayak: furgonetas de 9 plazas en Rovaniemi", "https://www.kayak.ie/Rovaniemi-9-Seater-Car-Hire.31873.9-lcv.ksp"],
+    ["Enterprise Rovaniemi: conductor joven y conductor extra", "https://www.enterprise.com/en/car-rental-locations/fi/rovaniemi-airport-zde4.html"],
+    ["Kayak (Finlandia): furgonetas en Rovaniemi", "https://www.fi.kayak.com/Rovaniemi-Pakettiauto-autonvuokraukset.31873.cva.ksp"],
+    ["Rhino Car Hire: precio medio por mes en el aeropuerto de Rovaniemi", "https://www.rhinocarhire.com/Finland/Rovaniemi-Airport-Car-Hire.aspx"],
+    ["Visit Finland: Airport Express de Rovaniemi", "https://visitfinland.com/fr/product/34243b3c-10a1-4857-a004-e48d6bf30977/airport-express"],
+        ["Booking.com: Guesthouse32", "https://www.booking.com/hotel/fi/guesthouse32.html"],
+    ["Kiwi.com: alternativas CPH–Helsinki, Oulu y Kittilä", "https://www.kiwi.com/"],
+    ["VR (oficial): billetes de tren nocturno, cabina Helsinki–Rovaniemi desde 59 €", "https://www.vr.fi/en/night-trains/tickets-to-night-trains"],
+    ["VR (oficial): trenes nocturnos, tipos de cabina y venta hasta 2027", "https://www.vr.fi/en/night-trains"],
+    ["Nachtzug.net: horario P265 Helsinki 19:29 → Rovaniemi 07:20 y P266 Rovaniemi 17:52 → Helsinki 06:27", "https://nachtzug.net/en/night-train/rovaniemi-helsinki/"],
+    ["EveryRail: tren nocturno Helsinki–Rovaniemi (horarios y precio de cabina)", "https://everyrail.com/finland/rovaniemi.md"],
+    ["Rather Be Exploring: rango de precios de cabina del Santa Claus Express", "https://ratherbeexploring.github.io/blog/rovaniemi-to-helsinki-by-overnight-train-aboard-the-santa-claus-express"]
+  ];
+  document.getElementById("sources").innerHTML = items.map(([t, u]) => `<li><a href="${u}">${t}</a></li>`).join("");
+}
+
+function syncControls() {
+  document.querySelectorAll("#ctl-group button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === state.group)));
+  document.querySelectorAll("#ctl-nights button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === state.nights)));
+  document.getElementById("ctl-buffer").checked = state.buffer;
+}
+function render() { syncControls(); renderCols(); renderMoves(); renderTable(); }
+
+document.getElementById("ctl-group").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { state.group = +b.dataset.v; render(); } });
+document.getElementById("ctl-nights").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { state.nights = +b.dataset.v; for (const d of Object.keys(DATA)) { const f = DATA[d].flights.find(f => f.def === state.nights); if (f) { state.flight[d] = f.id; if (f.move) state.moveBy[d] = f.move; } } render(); } });
+document.getElementById("moves").addEventListener("click", e => { const tr = e.target.closest("tr[data-m]"); if (tr) { state.moveBy[tr.dataset.d] = tr.dataset.m; render(); } });
+document.getElementById("moves").addEventListener("keydown", e => { const tr = e.target.closest("tr[data-m]"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); state.moveBy[tr.dataset.d] = tr.dataset.m; render(); } });
+
+document.getElementById("ctl-buffer").addEventListener("change", e => { state.buffer = e.target.checked; render(); });
+function turnOff(d, id) { state.sel[d][id].on = false; state.order[d] = state.order[d].filter(x => x !== id); }
+function turnOn(d, id) {
+  const sel = state.sel[d][id];
+  sel.on = true;
+  state.order[d] = state.order[d].filter(x => x !== id).concat(id);
+  const pl = placeActs(d, view(d, state));
+  if (!pl || !pl.unplaced.includes(id)) return;
+  const name = x => DATA[d].acts.find(a => a.id === x).name;
+  // buscar una actividad ya elegida que deje sitio (la más reciente primero)
+  const others = state.order[d].filter(x => x !== id).reverse();
+  for (const y of others) {
+    state.sel[d][y].on = false;
+    const p2 = placeActs(d, view(d, state));
+    if (!p2.unplaced.includes(id)) { state.order[d] = state.order[d].filter(x => x !== y); showNotice(`${name(id)} sustituye a ${name(y)}: van en el mismo hueco del plan.`); return; }
+    state.sel[d][y].on = true;
+  }
+  turnOff(d, id);
+  showNotice(`${name(id)} no cabe en el plan con ${view(d, state).nights} noches.`);
+}
+function showNotice(msg) {
+  let n = document.getElementById("notice");
+  if (!n) { n = document.createElement("div"); n.id = "notice"; n.setAttribute("role", "status"); document.body.appendChild(n); }
+  n.textContent = msg; n.hidden = false;
+  clearTimeout(showNotice.t); showNotice.t = setTimeout(() => { n.hidden = true; }, 4500);
+}
+document.querySelector(".presets").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  for (const d of Object.keys(DATA)) {
+    if (b.dataset.p === "cheap") defaultSel(d);
+    else { for (const a of DATA[d].acts) state.sel[d][a.id].on = false; state.order[d] = []; }
+  }
+  render();
+});
+document.getElementById("cols").addEventListener("change", e => {
+  const t = e.target;
+  if (t.matches("input[type=checkbox][data-a]")) { if (t.checked) turnOn(t.dataset.d, t.dataset.a); else turnOff(t.dataset.d, t.dataset.a); }
+  else if (t.matches("select[data-av]")) { state.sel[t.dataset.d][t.dataset.av].v = +t.value; turnOn(t.dataset.d, t.dataset.av); }
+  else if (t.matches("select[data-stay]")) state.stay[t.dataset.stay] = t.value;
+  else if (t.matches("select[data-move]")) state.moveBy[t.dataset.move] = t.value;
+  else if (t.matches("select[data-flight]")) state.flight[t.dataset.flight] = t.value;
+  render();
+});
+
+renderSources();
+render();
+</script>
+</body>
+</html>
