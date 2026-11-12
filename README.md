@@ -2,7 +2,7 @@
 
 An LLM agent (Claude) orchestrated research sub-agents connected to travel-data connectors (Booking.com, Kayak, Kiwi.com, Google) and consolidated their findings into an interactive dashboard for a multi-criteria group-travel decision.
 
-**Live demo:** https://alexvinuesa22-debug.github.io/voyageplanner_lapland_2027/
+**Live demo:** https://alejandrovinuesa.github.io/voyageplanner_lapland_2027/
 (The dashboard interface is in Spanish, as it was built for a Spanish-speaking group.)
 
 ## The problem
