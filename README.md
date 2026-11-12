@@ -39,8 +39,10 @@ flowchart LR
     C2 --> D
     C3 --> D
     C4 --> D
-    D --> E[Manual review by the owner]
+    D --> V[Verifier pass: nights, people, FX, sources]
+    V --> E[Human review and course corrections]
     E --> F[Interactive HTML dashboard]
+    E -. new constraints .-> B
 ```
 
 What the generated dashboard does with the consolidated data:
@@ -51,7 +53,22 @@ What the generated dashboard does with the consolidated data:
 - Builds a day-by-day plan that respects daylight windows.
 - Documents its own assumptions: each price is labelled as a **source** or an **estimate**, exchange rates are stated (SEK, NOK, DKK to EUR), and a +5 % contingency buffer is applied. Source links are listed on the page.
 
-<!-- TODO Alejandro: add how the agents were prompted (brief structure, number of sub-agents, which connector was used for which data) if you want to document it. -->
+### How the work was orchestrated
+
+The project ran on three levels: a **human** (me) set the goal, constraints and criteria and validated every result; an **orchestrator agent** broke each request into tasks, integrated the results and checked consistency; and **sub-agents** ran narrow tasks in parallel (flights, accommodation, cars, activities, number checks). A final verifier pass looked for inconsistencies in nights, people, currencies and unsourced prices.
+
+The tool was built over **six iteration rounds**, each triggered by a human correction the AI would not have made on its own:
+
+| Round | Human correction | Effect |
+|---|---|---|
+| 1 | "Cheap, but with guaranteed quality" | Accommodation filtered by rating, not price alone |
+| 2 | Fixed dates; "overestimate rather than underestimate" | +5 % buffer; every line labelled *source* or *estimate* |
+| 3 | Group of 20 → 10–14; Kiruna route extended to Norway | Cost model became a 10–14 person selector |
+| 4 | Carry-on only; SUVs instead of vans | Flights and car fleet re-searched under real constraints |
+| 5 | Third option replaced by "Tromsø only" | Final comparison between three plans the group considers viable |
+| 6 | Publish and document | README and process documentation |
+
+**Full process, iteration log and reusable prompt templates (orchestrator, sub-agent, verifier):** [docs/PROCESS.md](docs/PROCESS.md) · [versión en español](docs/PROCESS.es.md)
 
 ## Human in the loop and limitations
 
@@ -77,6 +94,8 @@ What the generated dashboard does with the consolidated data:
 ## Repository structure
 
 ```
-index.html   the whole dashboard (HTML + CSS + JS in a single file)
+index.html             the whole dashboard (HTML + CSS + JS in a single file)
+docs/PROCESS.md        how it was built: prompts, iteration and human oversight
+docs/PROCESS.es.md     Spanish version of the process document
 README.md
 ```
