@@ -1,6 +1,8 @@
 # Lapland 2027 Trip Planner: an agentic AI research and decision-support case study
 
-An LLM agent (Claude) orchestrated research sub-agents connected to travel-data connectors (Booking.com, Kayak, Kiwi.com, Google) and consolidated their findings into an interactive dashboard for a multi-criteria group-travel decision.
+An LLM agent (Claude) orchestrated research sub-agents connected to travel-data connectors (Kiwi.com, Kayak, Booking.com, Google) and consolidated their findings into an interactive dashboard for a multi-criteria group-travel decision.
+
+**Outcome:** about **2–3 hours** of human-AI iteration instead of an estimated **2–3 days** of manual searching, with more alternatives and a more complete comparison. The group chose **Tromsø only**.
 
 **Live demo:** https://alejandrovinuesa.github.io/voyageplanner_lapland_2027/
 (The dashboard interface is in Spanish, as it was built for a Spanish-speaking group.)
@@ -26,7 +28,7 @@ Each option involves several interacting decisions, so a simple price lookup is 
 
 ## How agentic AI was used
 
-An orchestrating agent (Claude) took the group's brief and delegated data gathering to research sub-agents/tools connected to travel-data sources through MCP-style tool calls. Each gathered options for its part of the problem (flights, accommodation, cars/transport, activities). The orchestrator then consolidated the results into one cost model and generated the HTML dashboard.
+An orchestrating agent (Claude) took the group's brief and delegated data gathering to research sub-agents/tools connected to travel-data sources through connectors (Kiwi.com, Kayak, Booking.com, Google). Each gathered options for its part of the problem (flights, accommodation, cars/transport, activities). The orchestrator then consolidated the results into one cost model and generated the HTML dashboard.
 
 ```mermaid
 flowchart LR
@@ -68,7 +70,9 @@ The tool was built over **six iteration rounds**, each triggered by a human corr
 | 5 | Third option replaced by "Tromsø only" | Final comparison between three plans the group considers viable |
 | 6 | Publish and document | README and process documentation |
 
-**Full process, iteration log and reusable prompt templates (orchestrator, sub-agent, verifier):** [docs/PROCESS.md](docs/PROCESS.md) · [versión en español](docs/PROCESS.es.md)
+![Comparison dashboard: three options side by side](docs/img/after_comparison_dashboard.png)
+
+**Full process, real prompts, before/after and reusable prompt templates (orchestrator, sub-agent, verifier):** [docs/PROCESS.md](docs/PROCESS.md) · [versión en español](docs/PROCESS.es.md)
 
 ## Human in the loop and limitations
 
@@ -80,7 +84,7 @@ The tool was built over **six iteration rounds**, each triggered by a human corr
 ## Skills demonstrated
 
 - Agent orchestration: delegating subtasks to research agents and merging their outputs
-- Tool use and connectors (Booking.com, Kayak, Kiwi.com, Google) via MCP-style tool calls
+- Tool use through connectors (Kiwi.com, Kayak, Booking.com, Google)
 - Multi-criteria comparison under constraints (budget, time, transfers, daylight, group size)
 - Data consolidation and transparent cost modelling (sources vs estimates, FX rates, contingency)
 - Front-end reporting: an interactive HTML/CSS/JS dashboard
@@ -97,5 +101,6 @@ The tool was built over **six iteration rounds**, each triggered by a human corr
 index.html             the whole dashboard (HTML + CSS + JS in a single file)
 docs/PROCESS.md        how it was built: prompts, iteration and human oversight
 docs/PROCESS.es.md     Spanish version of the process document
+docs/img/              before/after screenshots
 README.md
 ```

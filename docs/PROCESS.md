@@ -101,7 +101,41 @@ and tell me which totals move.
 
 ---
 
-## 6. Limits and good practice
+## 6. Real prompts (excerpts)
+
+Lightly edited for typos and translated from Spanish. They show the pattern that worked best: **give context and a goal, state the decision rule, and explicitly invite the agent to ask clarifying questions before building**.
+
+**Kickoff (round 0–1)**
+> I have this trip planner from a friend. The idea is to offer an alternative to Rovaniemi: search accommodation, flights and activities, and see an approximate total price depending on which activities we choose. You have the Booking connector: prioritise cheap accommodation with guaranteed quality. Give me several options. Use the instructions as a base, but we will keep expanding on them in this project.
+
+**Group size and transport rules (round 3)**
+> It doesn't look like we'll be 20. Change and check prices for 10, 11, 12, 13 or 14 people. Transport options should adapt to the group size too: which one is cheapest, and which one we need, changes with the number of people. I'd add a capacity rule of *seats − 1* per car/van so all the luggage fits. Ask me anything you need to get this properly refined. Options should lock depending on group size so we compare two at most (e.g. van vs car, or how many days of car hire if the trip allows it; in Kiruna you can't realistically rent a car for fewer days), or leave one locked because it's the cheapest.
+
+**Activities and calendar logic (round 4)**
+> Let's fix the activities now; Rovaniemi's are already fixed. By default, when it's 4 nights select the matching flights, and the same for 5. For the Norway and Kiruna + Norway activities, look at the plan in the HTML I gave you to see realistically how many things there is time for, so that selecting one activity swaps another one out, or vice versa. Ask me anything.
+
+Follow-up prompts made the day-by-day calendar adapt to the selected activities and lock incompatible options.
+
+---
+
+## 7. Before and after
+
+| Before: a friend's static planner | After: interactive comparison tool |
+|---|---|
+| ![Original planner](img/before_original_planner.png) | ![Comparison dashboard](img/after_comparison_dashboard.png) |
+| One destination (Kiruna), fixed 12–20 people, one itinerary, prices pending re-check | Three options side by side, 10–14 person selector, 4/5 nights, live per-person totals, source/estimate labels, locked options and an adaptive calendar |
+
+---
+
+## 8. Outcome and impact
+
+- **Time:** about **2–3 hours** of iteration, versus an estimated **2–3 days** of manual searching, which would also have produced fewer alternatives and a less complete comparison.
+- **Decision:** the group chose **Tromsø only**.
+- **Connectors used:** Kiwi.com, Kayak, Booking.com and Google.
+
+---
+
+## 9. Limits and good practice
 
 - Prices were checked on **9–10 November 2026** and may change at booking time.
 - This is a planning tool: it **does not book or pay**. A person decides and does that.
@@ -110,7 +144,7 @@ and tell me which totals move.
 
 ---
 
-## 7. What this project demonstrates
+## 10. What this project demonstrates
 
 1. **More iterations, better result:** each human correction improved the model (group, quality, luggage, cars, options).
 2. **Effective oversight:** scope and risk decisions were never delegated.

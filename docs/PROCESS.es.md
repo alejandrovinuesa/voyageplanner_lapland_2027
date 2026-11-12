@@ -136,7 +136,41 @@ Cambia [X] por [Y] porque [motivo]. Recalcula solo lo afectado y dime qué total
 
 ---
 
-## 6. Límites y buenas prácticas
+## 6. Prompts reales (extractos)
+
+Con erratas corregidas. Muestran el patrón que mejor funcionó: **dar contexto y objetivo, fijar la regla de decisión e invitar expresamente al agente a hacer preguntas antes de construir**.
+
+**Arranque (rondas 0–1)**
+> Tengo este planner de viaje de un amigo. La idea es ofrecer una opción diferente a Rovaniemi, buscando alojamientos, vuelos y actividades, y ver el precio total aproximado según qué actividades. Tienes el plug-in de Booking: la idea es priorizar alojamientos baratos con una calidad garantizada. Dame varias opciones. Léete las instrucciones como base, pero seguiremos expandiendo sobre ellas en este proyecto.
+
+**Tamaño del grupo y reglas de transporte (ronda 3)**
+> No parece que vayamos a ser 20. Cambia y revisa precios si somos 10, 11, 12, 13 o 14. Las opciones de transporte también se deben adaptar un poco a la gente que seamos, ¿no? Es decir, varía cuál es más barata y cuál hay que coger según los que seamos. Haría una norma de espacio del coche/furgo −1 por si llevamos maletas, que quepa todo. Pregúntame lo que quieras para dejarlo bien depurado. Las opciones deberían bloquearse según el número que seamos para comparar entre dos como mucho (quizá elegir furgo o coche, o cuántos días de coche si el viaje lo permite; en Kiruna no se podría realmente coger coche menos días) o dejar una bloqueada por ser la más barata.
+
+**Actividades y lógica del calendario (ronda 4)**
+> Vamos ahora a dejar fijadas las actividades; las de Rovaniemi ya están fijadas. Por defecto, cuando sean 4 noches, que se seleccionen los vuelos acordes, y cuando sean 5, igual. Para las actividades de Noruega y de Kiruna + Noruega hay que mirar el plan que hay en el HTML que te pasé para ver de forma realista a cuántas cosas daría tiempo, y que si se selecciona una se sustituya por otra o viceversa. Pregúntame lo que quieras.
+
+Otros prompts posteriores hicieron que el calendario se adaptara a las actividades elegidas y bloqueara las opciones incompatibles.
+
+---
+
+## 7. Antes y después
+
+| Antes: el planner estático de un amigo | Después: comparador interactivo |
+|---|---|
+| ![Planner original](img/before_original_planner.png) | ![Comparador](img/after_comparison_dashboard.png) |
+| Un destino (Kiruna), 12–20 personas fijas, un itinerario, precios pendientes de revisar | Tres opciones lado a lado, selector de 10–14 personas, 4/5 noches, total por persona en vivo, etiquetas de fuente/estimación, opciones bloqueadas y calendario adaptable |
+
+---
+
+## 8. Resultado e impacto
+
+- **Tiempo:** unas **2–3 horas** de iteración, frente a unos **2–3 días** estimados de búsqueda manual, que además habrían dado menos alternativas y una comparación menos completa.
+- **Decisión:** el grupo eligió **Solo Tromsø**.
+- **Conectores usados:** Kiwi.com, Kayak, Booking.com y Google.
+
+---
+
+## 9. Límites y buenas prácticas
 
 - Los precios se consultaron el **9–10 de noviembre de 2026** y pueden cambiar al reservar.
 - La herramienta es de planificación: **no reserva ni paga**. Eso lo decide y lo hace una persona.
@@ -145,7 +179,7 @@ Cambia [X] por [Y] porque [motivo]. Recalcula solo lo afectado y dime qué total
 
 ---
 
-## 7. Qué demuestra este proyecto
+## 10. Qué demuestra este proyecto
 
 1. **Más iteraciones, mejor resultado:** cada corrección humana mejoró el modelo (grupo, calidad, equipaje, coches, opciones).
 2. **Supervisión efectiva:** las decisiones de alcance y de riesgo no se delegaron.
