@@ -1,48 +1,82 @@
-# Lapland 2027 · trip comparator
+# Lapland 2027 Trip Planner: an agentic AI research and decision-support case study
 
-Interactive comparator to choose the group trip to Lapland (late January 2027, departing from Copenhagen, 10–14 people, around 23 years old). Priority: northern lights. Also huskies, snowmobiles, reindeer and sauna.
+An LLM agent (Claude) orchestrated research sub-agents connected to travel-data connectors (Booking.com, Kayak, Kiwi.com, Google) and consolidated their findings into an interactive dashboard for a multi-criteria group-travel decision.
 
-👉 **See the website:** https://alexvinuesa22-debug.github.io/voyageplanner_lapland_2027/
+**Live demo:** https://alexvinuesa22-debug.github.io/voyageplanner_lapland_2027/
+(The dashboard interface is in Spanish, as it was built for a Spanish-speaking group.)
 
-## The three options
+## The problem
+
+A group of 10-14 people wanted to travel from Copenhagen to Lapland in late January 2027, with northern lights as the top priority. Three candidate itineraries had to be compared on the same basis:
 
 | Option | Nights | Idea |
 |---|---|---|
-| 🇸🇪🇳🇴 **Kiruna + Norway** | 5 or 4 | Road trip by car: Kiruna → Narvik → Abisko. Snowmobiles, Polar Park, Abisko canyon, sauna by the fjord. |
-| 🇫🇮 **Rovaniemi** | 4 (fixed) | Flight to Helsinki + night train (12 h). Lakeside house in Posio with a car. Huskies, snowmobiles, Santa Claus, Korouoma, Ranua. |
-| 🇳🇴 **Tromsø only** | 5 or 4 | Direct flight, house on Kvaløya with a car every day. Lyngen with snowmobiles, Sommarøy, skiing, northern lights every night. |
+| Kiruna + Norway | 4 or 5 | Road trip by car: Kiruna, Narvik, Abisko |
+| Rovaniemi | 4 (fixed) | Flight to Helsinki, night train, house with cars |
+| Tromso only | 4 or 5 | Direct flight, one base, cars every day |
 
-Estimated price per person with 12 people: Rovaniemi ≈ €937, Tromsø only ≈ €1,062 (≈ €921 with 4 nights) and Kiruna + Norway ≈ €1,158.
+Each option involves several interacting decisions, so a simple price lookup is not enough:
 
-## What you can adjust on the website
+- **Cost per person**, depending on group size (10-14) and number of nights (4 or 5)
+- **Flights** (carry-on only, several departure and return times per option)
+- **Accommodation** priced for each group size
+- **Ground transport alternatives** (car classes, vans, night train, ferries, tolls, fuel or charging, insurance, young-driver fees)
+- **Time and transfers**, including daylight hours (roughly 4-6 hours of sun in late January) that constrain which activities fit on which day
+- **Optional activities** (huskies, snowmobiles, reindeer, sauna, etc.) that change both total cost and the daily schedule
 
-- Number of people (10–14) and nights (4 or 5).
-- Flight, accommodation and transport for each option.
-- Activities: ticking or removing them changes the total and the day-by-day schedule, which takes daylight hours into account.
-- +5 % buffer for unexpected costs.
+## How agentic AI was used
 
-## How it is calculated
+An orchestrating agent (Claude) took the group's brief and delegated data gathering to research sub-agents/tools connected to travel-data sources through MCP-style tool calls. Each gathered options for its part of the problem (flights, accommodation, cars/transport, activities). The orchestrator then consolidated the results into one cost model and generated the HTML dashboard.
 
-- **Flights:** Kiwi and Kayak, 9 adults, **carry-on only**.
-- **Accommodation:** real Booking prices for each group size.
-- **Cars:** Kayak and the group's planners, with full-coverage insurance, young driver, extra driver, fuel or charging at local prices, and tolls or ferries.
-- **Food:** €17 per day when cooking and €45 per day in hotels without a kitchen.
-- **Activities:** price from each operator's website. Each item states whether it is a **source** or an **estimate**.
-- **Exchange rates:** 10.95 SEK/€, 11.5 NOK/€ and 7.46 DKK/€.
+```mermaid
+flowchart LR
+    A[User brief: group, dates, priorities] --> B[Orchestrator agent - Claude]
+    B --> C1[Flights: Kiwi.com, Kayak]
+    B --> C2[Accommodation: Booking.com]
+    B --> C3[Cars and transport: Kayak, Google]
+    B --> C4[Activities and operators: Google, operator sites]
+    C1 --> D[Consolidation and cost modelling]
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    D --> E[Manual review by the owner]
+    E --> F[Interactive HTML dashboard]
+```
 
-Everything is deliberately overestimated. Prices checked on 9–10 November 2026: they may change when booking.
+What the generated dashboard does with the consolidated data:
 
-## Structure
+- Compares the three options side by side, with a per-person total that updates live.
+- Lets the user change group size, nights, flight, accommodation, transport mode and activities.
+- Shows transport alternatives per option and a summary table by group size, flagging the cheapest option.
+- Builds a day-by-day plan that respects daylight windows.
+- Documents its own assumptions: each price is labelled as a **source** or an **estimate**, exchange rates are stated (SEK, NOK, DKK to EUR), and a +5 % contingency buffer is applied. Source links are listed on the page.
+
+<!-- TODO Alejandro: add how the agents were prompted (brief structure, number of sub-agents, which connector was used for which data) if you want to document it. -->
+
+## Human in the loop and limitations
+
+- Prices are **snapshots**: flights, accommodation and cars were checked on 9-10 November 2026 (cars partly on 7 November). Availability and prices will change.
+- Agent outputs were **reviewed manually** and adjusted with the group's own planning; some figures are deliberate overestimates, and group sizes above 9 may need split bookings.
+- Activity prices are "from" prices taken from operator websites or are estimates, and are labelled as such.
+- This is a **planning and comparison tool, not a booking engine or an offer**. Confirm prices, schedules and conditions before paying.
+
+## Skills demonstrated
+
+- Agent orchestration: delegating subtasks to research agents and merging their outputs
+- Tool use and connectors (Booking.com, Kayak, Kiwi.com, Google) via MCP-style tool calls
+- Multi-criteria comparison under constraints (budget, time, transfers, daylight, group size)
+- Data consolidation and transparent cost modelling (sources vs estimates, FX rates, contingency)
+- Front-end reporting: an interactive HTML/CSS/JS dashboard
+- Critical review of AI outputs and clear communication of uncertainty
+
+## Tech
+
+- LLM agents (Claude) with travel-data connectors
+- HTML, CSS and vanilla JavaScript in a single file, hosted on GitHub Pages
+
+## Repository structure
 
 ```
-index.html   ← the whole website (HTML + CSS + JS in a single file)
+index.html   the whole dashboard (HTML + CSS + JS in a single file)
 README.md
 ```
-
-## Updating
-
-Replace `index.html` with the new version (on GitHub: **Add file → Upload files**). GitHub Pages updates by itself within a minute or two.
-
----
-
-*Planning tool, not a booking or an offer. Confirm prices, schedules and conditions before paying.*
